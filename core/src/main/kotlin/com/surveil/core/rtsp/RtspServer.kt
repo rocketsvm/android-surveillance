@@ -97,7 +97,13 @@ class RtspServer(
             socket.soTimeout = 75_000
             try {
                 while (!socket.isClosed) {
-                    val req = readRequest() ?: break
+                    val req = try {
+                        readRequest() ?: break
+                    } catch (e: java.net.SocketTimeoutException) {
+                        // A TCP-interleaved viewer may stay silent; a dead one shows up as a failed write.
+                        // UDP sessions must keep the control connection alive (RTSP session timeout).
+                        if (playing && transports.values.all { it.tcp }) continue else break
+                    }
                     handle(req)
                 }
             } finally {

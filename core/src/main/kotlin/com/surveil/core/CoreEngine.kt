@@ -297,7 +297,10 @@ class CoreEngine(
                 }
             }
         }
-        if (Keys.MOTION_ZONES in changed || Keys.MOTION_ENABLED in changed) detector.reset()
+        if (Keys.MOTION_ZONES in changed || Keys.MOTION_ENABLED in changed) {
+            // The detector is confined to its own thread.
+            runCatching { motionExec.execute { detector.reset() } }
+        }
     }
 
     private fun startServer(port: Int) {

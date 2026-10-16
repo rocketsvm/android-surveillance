@@ -136,7 +136,8 @@ class GlRenderer(private val callbacks: Callbacks) {
     fun setPreview(surface: Surface?) {
         if (released) return
         val latch = CountDownLatch(1)
-        handler.post {
+        // post() fails if the render thread already quit (pipeline restarting): nothing to wait for.
+        val posted = handler.post {
             try {
                 val e = egl
                 previewSurface?.let { s -> e?.releaseSurface(s) }
@@ -152,13 +153,14 @@ class GlRenderer(private val callbacks: Callbacks) {
                 latch.countDown()
             }
         }
-        latch.await(2, TimeUnit.SECONDS)
+        if (posted) latch.await(2, TimeUnit.SECONDS)
     }
 
     fun snapshot(maxWidth: Int, callback: (Bitmap?) -> Unit) {
-        handler.post {
+        val posted = handler.post {
             if (egl == null) callback(null) else snapshots += SnapshotRequest(maxWidth, callback)
         }
+        if (!posted) callback(null)
     }
 
     /** Releases everything. Blocks until done. */
