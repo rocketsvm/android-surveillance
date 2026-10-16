@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.surveil.camera"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.surveil.camera"

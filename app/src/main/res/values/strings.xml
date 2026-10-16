@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Камера наблюдения</string>
+    <string name="channel_service">Работа камеры</string>
+    <string name="channel_alerts">Запуск камеры</string>
+    <string name="notif_running">Камера работает</string>
+    <string name="notif_stop">Остановить</string>
+    <string name="notif_boot_title">Камера наблюдения не запущена</string>
+    <string name="notif_boot_text">Нажмите, чтобы запустить камеру после перезагрузки</string>
+</resources>

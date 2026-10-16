@@ -154,13 +154,13 @@ class RecordingsRepo(
                 day.listFiles { f -> f.name.endsWith(".mp4.journal") }?.forEach { j ->
                     val video = File(j.path.removeSuffix(".journal"))
                     val id = video.name.removeSuffix(".mp4")
-                    val durationMs = Mp4FileWriter.recover(video)
-                    if (durationMs != null) {
+                    val r = Mp4FileWriter.recover(video)
+                    if (r != null) {
                         val start = runCatching { idFormat().parse(id.substring(0, 15))!!.time }.getOrDefault(video.lastModified())
-                        val meta = RecordingMeta(id, start, durationMs, video.length(), "recovered")
+                        val meta = RecordingMeta(id, start, r.durationMs, video.length(), "recovered", r.width, r.height, r.hasAudio)
                         File(day, "$id.json").writeText(json.encodeToString(RecordingMeta.serializer(), meta))
                         recovered++
-                        log("recovered interrupted recording $id (${durationMs / 1000}s)")
+                        log("recovered interrupted recording $id (${r.durationMs / 1000}s)")
                     }
                 }
             }

@@ -308,7 +308,7 @@ function startPlayer() {
       onStats: ({ lag, bytes, info }) => {
         if (info) {
           $('#badge-res').textContent = `${info.width}×${info.height}`;
-          $('#stage').style.aspectRatio = `${info.width} / ${info.height}`;
+          $('#stage').style.setProperty('--ar', String(info.width / info.height));
         }
         const now = performance.now();
         if (now - lastBytesAt >= 2000) {

@@ -103,6 +103,7 @@ class CoreEngine(
     @Volatile private var motionActive = false
     @Volatile private var motionScore = 0f
     @Volatile private var motionBox: FloatArray? = null
+    @Volatile private var motionWarmupUntilMs = Long.MAX_VALUE
     private var motionStartMs = 0L
     private var motionPeak = 0f
     private var lastMotionPushNs = 0L
@@ -153,9 +154,18 @@ class CoreEngine(
 
     // ---- inputs from the platform ----
 
-    fun onVideoFormat(video: VideoFormat, audio: AudioFormat?) = hub.setFormat(video, audio)
+    fun onVideoFormat(video: VideoFormat, audio: AudioFormat?) {
+        // Exposure and white balance settle during the first seconds: keep the detector quiet.
+        motionWarmupUntilMs = System.currentTimeMillis() + MOTION_WARMUP_MS
+        hub.setFormat(video, audio)
+    }
+
     fun onFrame(frame: MediaFrame) = hub.push(frame)
-    fun onStreamStopped() = hub.stop()
+
+    fun onStreamStopped() {
+        motionWarmupUntilMs = Long.MAX_VALUE
+        hub.stop()
+    }
 
     fun setCameraStatus(s: CameraStatus) {
         val prev = cameraStatus
@@ -196,6 +206,11 @@ class CoreEngine(
 
     private fun processMotion(luma: ByteArray, width: Int, height: Int, timeMs: Long) {
         val s = settings
+        if (System.currentTimeMillis() < motionWarmupUntilMs) {
+            detector.reset()
+            if (motionActive) setMotion(false, 0f, null)
+            return
+        }
         if (!s.bool(Keys.MOTION_ENABLED)) {
             if (motionActive) setMotion(false, 0f, null)
             detector.reset()
@@ -402,6 +417,10 @@ class CoreEngine(
         override fun onRecorderError(message: String) {
             events.add("recording", message)
         }
+    }
+
+    companion object {
+        private const val MOTION_WARMUP_MS = 3000L
     }
 
     /** Measures delivered fps and bitrate over a sliding window. */

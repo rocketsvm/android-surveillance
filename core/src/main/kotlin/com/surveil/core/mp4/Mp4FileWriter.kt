@@ -288,11 +288,14 @@ class Mp4FileWriter private constructor(
             return Mp4FileWriter(file, video, audio, raf, mdatPos, j, jfos)
         }
 
+        /** What [recover] salvaged. */
+        class Recovered(val durationMs: Long, val width: Int, val height: Int, val hasAudio: Boolean)
+
         /**
-         * Finishes a clip left behind by a crash, using its journal. Returns the duration in ms,
-         * or null if nothing could be salvaged (both files are then removed).
+         * Finishes a clip left behind by a crash, using its journal. Returns null if nothing could
+         * be salvaged (both files are then removed).
          */
-        fun recover(file: File): Long? {
+        fun recover(file: File): Recovered? {
             val jf = journalFile(file)
             if (!jf.exists() || !file.exists()) {
                 jf.delete()
@@ -327,13 +330,13 @@ class Mp4FileWriter private constructor(
                     } catch (_: EOFException) {
                     }
                     raf.setLength(writer.dataEnd)
-                    writer.finish()
+                    val ms = writer.finish()
+                    if (ms > 0) Recovered(ms, writer.video.width, writer.video.height, writer.audio != null && writer.audioTable.count > 0) else null
                 }
             }.getOrNull()
-            if (result == null || result == 0L) {
+            if (result == null) {
                 file.delete()
                 jf.delete()
-                return null
             }
             return result
         }

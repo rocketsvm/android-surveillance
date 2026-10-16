@@ -30,7 +30,7 @@ const profile = mkdtempSync(join(tmpdir(), 'cdp-'));
 
 const proc = spawn(chrome, [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
-  '--autoplay-policy=no-user-gesture-required', '--no-first-run', '--no-default-browser-check',
+  '--autoplay-policy=no-user-gesture-required', '--no-first-run', '--no-default-browser-check', '--no-proxy-server',
   `--window-size=${width},${height}`, 'about:blank',
 ], { stdio: 'ignore' });
 
