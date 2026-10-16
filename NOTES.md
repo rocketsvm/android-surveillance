@@ -3,6 +3,11 @@
 Репозиторий: https://github.com/Paradoximus/nesterov-videonabludenie-android (private).
 Исходный черновик заказчика — `SurveillanceCamera.zip` (в git не входит).
 
+**Готовый APK**: `dist/SurveillanceCamera-1.0.0.apk` (в этой папке) и релиз
+https://github.com/Paradoximus/nesterov-videonabludenie-android/releases/tag/v1.0.0.
+Подпись — `keystore/release.jks` + `keystore.properties` (только локально, в git не входят;
+при потере ключа обновления поверх установленного приложения станут невозможны).
+
 ## Почему черновик переписан с нуля
 
 Глобальные огрехи черновика (Ktor + CameraX + WebCodecs):
@@ -63,8 +68,9 @@ Camera2 ──► SurfaceTexture ──► GL-рендер (поворот, зе
   запускать через `env -u HTTP_PROXY ffmpeg ...`.
 - **Кириллица в тестовых командах Git Bash ломается дважды**: (1) аргумент `curl -d '{"x":"Камера"}'`
   уходит в cp1251, сервер получает мусор — кириллицу в API слать через Python (`urllib`, UTF-8);
-  (2) `python -c` читает пайп в cp1251 — ставить `PYTHONIOENCODING=utf-8` и читать
-  `sys.stdin.buffer`. Приложение тут ни при чём: в нём везде UTF-8.
+  (2) `python -c` читает пайп в cp1251 — запускать `python -I -X utf8` и читать
+  `sys.stdin.buffer` (`PYTHONIOENCODING` при `-I` игнорируется). Приложение тут ни при чём:
+  в нём везде UTF-8.
 - `python tools/tap.py "<текст>"` — нажать элемент на экране телефона по тексту
   (через `uiautomator dump`; Compose отдаёт текст в дерево доступности). `--list` — что видно.
 - **heredoc в Bash съедает обратный слеш** (`\n` в Kotlin-строке превратился в настоящий перенос) —
@@ -105,6 +111,10 @@ Camera2 ──► SurfaceTexture ──► GL-рендер (поворот, зе
 - RTSP: H.264+AAC по TCP и UDP, ffprobe/ffmpeg без ошибок. Особенность ffmpeg (не наша):
   AAC из любого RTP-источника приходит без флага keyframe, поэтому `ffmpeg -c copy` пишет
   0 аудиопакетов — нужен `-copyinkf` или перекодирование звука; проверено на RTP-потоке самого ffmpeg.
+- Telegram: клиент Bot API (`notify/TelegramNotifier`) проверен тестами против поддельного API на
+  нашем же HTTP-сервере (multipart фиксированной длины, getUpdates, ошибки, пауза между алертами).
+  С настоящим ботом на телефоне ещё не проверялся — нужен токен.
+- События питания: `dumpsys battery unplug/reset` → «Зарядка отключена/подключена (батарея N%)».
 - Release-сборка (R8): веб-API, настройки, плеер работают. Debug подписывается тем же ключом,
   что и release (`keystore/release.jks`, пароли в `keystore.properties` — оба вне git;
   ключ терять нельзя: без него обновить установленное приложение не выйдет).
