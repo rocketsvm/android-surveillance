@@ -26,6 +26,7 @@ import com.surveil.camera.platform.DeviceInfo
 import com.surveil.camera.ui.MainActivity
 import com.surveil.core.CoreEngine
 import com.surveil.core.EngineStatus
+import com.surveil.core.settings.Keys
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,6 +50,7 @@ class CameraService : LifecycleService() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private var lastNotificationText = ""
+    @Volatile private var micDeclared = false
 
     override fun onCreate() {
         super.onCreate()
@@ -58,10 +60,9 @@ class CameraService : LifecycleService() {
             return
         }
         try {
-            ServiceCompat.startForeground(
-                this, NOTIFICATION_ID, buildNotification("Запуск…"),
-                if (Build.VERSION.SDK_INT >= 30) ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA else 0,
-            )
+            val wantMic = App.settings.current.bool(Keys.AUDIO_ENABLED) && hasMicPermission()
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification("Запуск…"), fgsTypes(wantMic))
+            micDeclared = wantMic
         } catch (e: Exception) {
             // Started from the background without an exemption (Android 12+/14+ rules).
             Log.e(TAG, "startForeground refused", e)
@@ -74,7 +75,7 @@ class CameraService : LifecycleService() {
         val catalog = CameraCatalog(this)
         val platform = AndroidPlatform(this, catalog)
         val core = CoreEngine(platform, App.settings, filesDir)
-        val pipeline = CapturePipeline(this, core, catalog)
+        val pipeline = CapturePipeline(this, core, catalog, micGate = ::micGate)
         platform.pipeline = pipeline
         core.start()
         pipeline.start()
@@ -114,6 +115,32 @@ class CameraService : LifecycleService() {
         engine = null
         releaseLocks()
         super.onDestroy()
+    }
+
+    private fun hasMicPermission() =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
+    private fun fgsTypes(mic: Boolean): Int = when {
+        Build.VERSION.SDK_INT < 30 -> 0
+        mic -> ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        else -> ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+    }
+
+    /**
+     * The microphone needs the "microphone" foreground-service type, which Android only grants while
+     * the app is visible. Returns null when audio may be captured, otherwise the reason.
+     */
+    private fun micGate(): String? {
+        if (!hasMicPermission()) return "Нет разрешения на микрофон — откройте приложение на телефоне"
+        if (micDeclared) return null
+        return try {
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(lastNotificationText.ifEmpty { "Запуск…" }), fgsTypes(true))
+            micDeclared = true
+            null
+        } catch (e: Exception) {
+            Log.w(TAG, "microphone type refused", e)
+            "Чтобы включить звук, откройте приложение на телефоне"
+        }
     }
 
     private fun acquireLocks() {

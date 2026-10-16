@@ -135,6 +135,15 @@ sealed class HttpResponse(val status: Int) {
     }
 }
 
+/** Output of a streaming response that can be torn down from another thread (stalled client). */
+class StreamOutput internal constructor(out: OutputStream, private val socket: java.net.Socket) : java.io.FilterOutputStream(out) {
+    override fun write(b: ByteArray, off: Int, len: Int) = out.write(b, off, len)
+
+    fun abort() {
+        runCatching { socket.close() }
+    }
+}
+
 fun interface HttpHandler {
     fun handle(request: HttpRequest): HttpResponse
 }

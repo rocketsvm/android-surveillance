@@ -329,6 +329,7 @@ class CoreEngine(
             put("version", platform.appVersion)
             put("uptimeSec", (System.currentTimeMillis() - startedAtMs) / 1000)
             put("serverTime", System.currentTimeMillis())
+            put("tzOffsetMin", tzOffsetMin())
             putJsonObject("camera") {
                 put("state", st.camera.state)
                 st.camera.error?.let { put("error", it) }
@@ -337,6 +338,8 @@ class CoreEngine(
                 put("height", st.camera.height)
                 put("fps", st.camera.fps)
                 st.camera.encoder?.let { put("encoder", it) }
+                put("audio", st.camera.audio)
+                st.camera.audioError?.let { put("audioError", it) }
             }
             putJsonObject("stream") {
                 put("fps", Math.round(st.fps * 10) / 10.0)
@@ -379,6 +382,9 @@ class CoreEngine(
             put("authRequired", s.authEnabled)
         }
     }
+
+    /** The phone's current UTC offset: the UI shows times as the camera (and its OSD) sees them. */
+    fun tzOffsetMin(): Int = java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000
 
     fun motionJson(): JsonObject = buildJsonObject {
         put("type", "motion")

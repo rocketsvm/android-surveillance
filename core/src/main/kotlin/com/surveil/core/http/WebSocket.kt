@@ -111,6 +111,9 @@ class WebSocket internal constructor(
         terminate()
     }
 
+    /** Closes the socket immediately, without the close handshake. Unblocks a writer stuck on a dead peer. */
+    fun abort() = terminate()
+
     private fun terminate() {
         isOpen = false
         runCatching { socket.close() }

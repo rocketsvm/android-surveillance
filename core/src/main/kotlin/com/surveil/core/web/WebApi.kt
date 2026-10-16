@@ -58,6 +58,7 @@ class WebApi(private val engine: CoreEngine) {
                 put("authRequired", engine.auth.required)
                 put("authorized", engine.auth.isAuthorized(it))
                 put("name", engine.settings.name)
+                put("tzOffsetMin", engine.tzOffsetMin())
             })
         }
         post("/api/login", ::login)

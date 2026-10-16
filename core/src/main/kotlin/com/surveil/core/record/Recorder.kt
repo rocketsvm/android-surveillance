@@ -65,6 +65,8 @@ class Recorder(
     private var lastMotionUs = Long.MIN_VALUE / 2
     private var lastMotionScore = 0f
     private var lastCleanupNs = 0L
+    /** After a write error (e.g. storage full) new clips are not attempted until this stream time. */
+    private var retryAfterUs = Long.MIN_VALUE
 
     @Volatile var manual = false
         private set
@@ -151,7 +153,9 @@ class Recorder(
                 writer = null
                 clip = null
                 currentClipId = null
+                currentTrigger = null
                 repo.activeId = null
+                retryAfterUs = nowUs + ERROR_BACKOFF_US
             }
         }
     }
@@ -190,7 +194,7 @@ class Recorder(
             if (!shouldRecord(s)) finishClip()
             return
         }
-        if (!shouldRecord(s)) return
+        if (!shouldRecord(s) || nowUs < retryAfterUs) return
         if (s.int(Keys.REC_PRE_SEC) > 0 && preroll.isNotEmpty() && preroll.first().isVideoKey) {
             startClip(v, s, preroll.toList())
         } else if (f.isVideoKey) {
@@ -283,5 +287,6 @@ class Recorder(
         private const val MAX_QUEUE_BYTES = 64L * 1024 * 1024
         private const val MAX_PREROLL_BYTES = 48L * 1024 * 1024
         private const val GB = 1024.0 * 1024 * 1024
+        private const val ERROR_BACKOFF_US = 30_000_000L
     }
 }

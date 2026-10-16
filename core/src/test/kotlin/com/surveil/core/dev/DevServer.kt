@@ -7,6 +7,7 @@ import com.surveil.core.NetAddress
 import com.surveil.core.Platform
 import com.surveil.core.StorageRoot
 import com.surveil.core.h264.H264
+import com.surveil.core.media.AudioFormat
 import com.surveil.core.media.MediaFrame
 import com.surveil.core.media.Track
 import com.surveil.core.media.VideoFormat
@@ -95,11 +96,24 @@ class FakeCamera(private val engine: CoreEngine, private val file: File) : Threa
         val sps = nals.first { H264.nalType(it[0]) == H264.NAL_SPS }
         val pps = nals.first { H264.nalType(it[0]) == H264.NAL_PPS }
         val format = VideoFormat(sps, pps)
-        engine.onVideoFormat(format, null)
+        val aac = File(file.parentFile, "test.aac").takeIf { it.isFile }?.let { readAdts(it.readBytes()) }
+        val audioFormat = aac?.let { AudioFormat.aacLc(48000, 1) }
+        engine.onVideoFormat(format, audioFormat)
         engine.setCameraStatus(CameraStatus("running", null, "0", format.width, format.height, 20, "x264 (file)"))
         println("Fake camera: ${units.size} frames, $format")
         val frameUs = 50_000L
         val t0 = System.nanoTime()
+        if (aac != null) Thread({
+            // AAC frames: 1024 samples at 48 kHz, paced against the same start time as video.
+            var k = 0L
+            while (true) {
+                val pts = k * 1024L * 1_000_000L / 48000
+                engine.onFrame(MediaFrame(Track.AUDIO, aac[(k % aac.size).toInt()], pts, true, System.currentTimeMillis()))
+                k++
+                val wait = t0 + (k * 1024L * 1_000_000_000L / 48000) - System.nanoTime()
+                if (wait > 0) sleep(wait / 1_000_000, (wait % 1_000_000).toInt())
+            }
+        }, "fake-audio").apply { isDaemon = true; start() }
         var i = 0L
         while (true) {
             val au = units[(i % units.size).toInt()]
@@ -111,6 +125,22 @@ class FakeCamera(private val engine: CoreEngine, private val file: File) : Threa
             if (wait > 0) sleep(wait / 1_000_000, (wait % 1_000_000).toInt())
         }
     }
+}
+
+/** Splits an ADTS stream into raw AAC frames. */
+fun readAdts(b: ByteArray): List<ByteArray> {
+    val out = ArrayList<ByteArray>()
+    var i = 0
+    while (i + 7 <= b.size) {
+        if (b[i].toInt() and 0xff != 0xff || b[i + 1].toInt() and 0xf0 != 0xf0) { i++; continue }
+        val protectionAbsent = b[i + 1].toInt() and 1
+        val len = ((b[i + 3].toInt() and 3) shl 11) or ((b[i + 4].toInt() and 0xff) shl 3) or ((b[i + 5].toInt() and 0xe0) ushr 5)
+        val head = if (protectionAbsent == 1) 7 else 9
+        if (len <= head || i + len > b.size) break
+        out += b.copyOfRange(i + head, i + len)
+        i += len
+    }
+    return out
 }
 
 /** Synthetic 160×90 luma frames: a noisy static scene with a box walking through every 40 s. */

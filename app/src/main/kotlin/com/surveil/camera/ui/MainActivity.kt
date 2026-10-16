@@ -68,6 +68,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun hasCamera() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+    private fun hasMic() = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
     private fun hasNotifications() = Build.VERSION.SDK_INT < 33 ||
         ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
@@ -125,9 +127,13 @@ class MainActivity : ComponentActivity() {
         var screen by rememberSaveable { mutableStateOf(if (App.guideSeen) "home" else "guide") }
         var dim by rememberSaveable { mutableStateOf(false) }
 
-        val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res ->
             cameraGranted = hasCamera()
             notificationsGranted = hasNotifications()
+            // Microphone just granted while audio is on: restart capture so audio joins the stream.
+            if (res[Manifest.permission.RECORD_AUDIO] == true && App.settings.current.bool(Keys.AUDIO_ENABLED)) {
+                EngineHolder.current.value?.pipeline?.restart()
+            }
         }
         val requestCamera = {
             val list = mutableListOf(Manifest.permission.CAMERA)
@@ -135,7 +141,15 @@ class MainActivity : ComponentActivity() {
             permissions.launch(list.toTypedArray())
         }
 
+        val audioOn = settings.bool(Keys.AUDIO_ENABLED)
+        LaunchedEffect(audioOn) {
+            if (audioOn && !hasMic()) permissions.launch(arrayOf(Manifest.permission.RECORD_AUDIO))
+        }
         LifecycleResumeEffect(Unit) {
+            // Audio enabled from the browser while the app was in the background: the microphone can
+            // only be attached now that the app is visible.
+            val e = EngineHolder.current.value
+            if (e != null && e.core.status.value.camera.audio == "error" && hasMic()) e.pipeline.restart()
             cameraGranted = hasCamera()
             notificationsGranted = hasNotifications()
             overlayGranted = Settings.canDrawOverlays(this@MainActivity)

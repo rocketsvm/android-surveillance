@@ -53,25 +53,27 @@ function fmtUptime(sec) {
   if (hh) return `${hh} ч ${mm} мин`;
   return `${mm} мин`;
 }
-const fmtTime = (ms) => new Date(ms).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-const fmtShortTime = (ms) => new Date(ms).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+/* All times are shown in the camera's time zone, matching the date burned into the video. */
+let camTzMin = null;
+const camDate = (ms) => new Date(ms + (camTzMin != null ? camTzMin : -new Date(ms).getTimezoneOffset()) * 60000);
+const fmtTime = (ms) => camDate(ms).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'UTC' });
+const fmtShortTime = (ms) => camDate(ms).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
 function dayKey(ms) {
-  const d = new Date(ms);
-  return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+  const d = camDate(ms);
+  return d.getUTCFullYear() + '-' + d.getUTCMonth() + '-' + d.getUTCDate();
 }
 function fmtDay(ms) {
-  const d = new Date(ms), now = new Date();
-  const start = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const d = camDate(ms), now = camDate(Date.now());
+  const start = (x) => Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate());
   const diff = Math.round((start(now) - start(d)) / 86400000);
   if (diff === 0) return 'Сегодня';
   if (diff === 1) return 'Вчера';
-  const opts = { day: 'numeric', month: 'long', weekday: 'short' };
-  if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+  const opts = { day: 'numeric', month: 'long', weekday: 'short', timeZone: 'UTC' };
+  if (d.getUTCFullYear() !== now.getUTCFullYear()) opts.year = 'numeric';
   return d.toLocaleDateString('ru-RU', opts);
 }
 function fmtDateTime(ms) {
-  const d = new Date(ms);
-  return fmtDay(ms) + ', ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return fmtDay(ms) + ', ' + fmtTime(ms);
 }
 
 function toast(text, isError) {
@@ -208,6 +210,7 @@ function setLive(kind, text) {
 function updateStatus(st) {
   if (!st) return;
   S.status = st;
+  if (st.tzOffsetMin != null) camTzMin = st.tzOffsetMin;
   $('#cam-name').textContent = st.name || 'Камера';
   document.title = (st.name || 'Камера') + ' — видеонаблюдение';
   const cam = st.camera || {};
@@ -307,6 +310,7 @@ function startPlayer() {
       },
       onStats: ({ lag, bytes, info }) => {
         if (info) {
+          $('#btn-sound').hidden = !info.audio;
           $('#badge-res').textContent = `${info.width}×${info.height}`;
           $('#stage').style.setProperty('--ar', String(info.width / info.height));
         }
@@ -343,6 +347,13 @@ function initLive() {
     } catch (e) { toast(e.message, true); }
   };
   $('#btn-torch').onclick = () => saveSetting('camera.torch', !S.values['camera.torch']);
+  $('#btn-sound').onclick = () => {
+    const v = $('#video');
+    v.muted = !v.muted;
+    if (!v.muted) v.play().catch(() => {});
+    $('#btn-sound').classList.toggle('on', !v.muted);
+    $('#btn-sound use').setAttribute('href', v.muted ? '#i-mute' : '#i-volume');
+  };
   $('#btn-fullscreen').onclick = () => {
     const stage = $('#stage'), v = $('#video');
     if (document.fullscreenElement) document.exitFullscreen();
@@ -888,6 +899,7 @@ async function boot() {
   window.addEventListener('hashchange', route);
   try {
     const s = await api('/api/session');
+    if (s.tzOffsetMin != null) camTzMin = s.tzOffsetMin;
     if (s.name) $('#cam-name').textContent = s.name;
     if (s.authRequired && !s.authorized) { $('#login-title').textContent = s.name || 'Вход'; showLogin(); return; }
   } catch (e) {

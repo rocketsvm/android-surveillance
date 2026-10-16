@@ -81,6 +81,30 @@ class LiveStreamer(private val hub: StreamHub) {
     private val viewerCount = AtomicInteger()
     val viewers: Int get() = viewerCount.get()
 
+    /** A viewer whose writes stopped progressing (peer vanished without closing TCP) gets cut off. */
+    private class Session(val abort: () -> Unit) {
+        @Volatile var progressNs = System.nanoTime()
+    }
+
+    private val sessions = java.util.concurrent.ConcurrentHashMap.newKeySet<Session>()
+    private val watchdog by lazy {
+        thread(name = "live-watchdog", isDaemon = true) {
+            while (true) {
+                Thread.sleep(5000)
+                val now = System.nanoTime()
+                for (s in sessions) if (now - s.progressNs > STALL_NS) {
+                    sessions.remove(s)
+                    s.abort()
+                }
+            }
+        }
+    }
+
+    private fun register(abort: () -> Unit): Session {
+        watchdog
+        return Session(abort).also { sessions += it }
+    }
+
     /** fMP4 over WebSocket: a JSON `init` text message, the init segment, then fragments as binary messages. */
     fun serveWebSocket(ws: WebSocket) {
         val sink = QueueSink(MAX_QUEUE_BYTES)
@@ -90,6 +114,7 @@ class LiveStreamer(private val hub: StreamHub) {
             sink.queue.close()
         }
         viewerCount.incrementAndGet()
+        val session = register { ws.abort() }
         attach(sink)
         try {
             var lastPing = System.nanoTime()
@@ -99,6 +124,7 @@ class LiveStreamer(private val hub: StreamHub) {
                 if (now - lastPing > PING_INTERVAL_NS) {
                     lastPing = now
                     if (!ws.ping()) break
+                    session.progressNs = System.nanoTime()
                 }
                 if (item == null) {
                     if (sink.queue.closed) break else continue
@@ -109,13 +135,17 @@ class LiveStreamer(private val hub: StreamHub) {
                             ws.sendText(initMessage(out.video, out.audio))
                             ws.sendBinary(out.segment)
                         }
-                        is LiveFmp4Muxer.Out.Chunk -> if (!ws.sendBinary(out.parts)) break@loop
+                        is LiveFmp4Muxer.Out.Chunk -> {
+                            if (!ws.sendBinary(out.parts)) break@loop
+                            session.progressNs = System.nanoTime()
+                        }
                         LiveFmp4Muxer.Out.Restart -> { ws.close(4000, "format changed"); break@loop }
                         LiveFmp4Muxer.Out.End -> { ws.close(4001, "stream stopped"); break@loop }
                     }
                 }
             }
         } finally {
+            sessions -= session
             hub.removeSink(sink)
             sink.queue.close()
             viewerCount.decrementAndGet()
@@ -128,6 +158,7 @@ class LiveStreamer(private val hub: StreamHub) {
         val sink = QueueSink(MAX_QUEUE_BYTES)
         val muxer = LiveFmp4Muxer()
         viewerCount.incrementAndGet()
+        val session = register { (out as? com.surveil.core.http.StreamOutput)?.abort() }
         attach(sink)
         try {
             var idle = 0
@@ -146,8 +177,10 @@ class LiveStreamer(private val hub: StreamHub) {
                     }
                 }
                 out.flush()
+                session.progressNs = System.nanoTime()
             }
         } finally {
+            sessions -= session
             hub.removeSink(sink)
             sink.queue.close()
             viewerCount.decrementAndGet()
@@ -167,5 +200,6 @@ class LiveStreamer(private val hub: StreamHub) {
     companion object {
         private const val MAX_QUEUE_BYTES = 8L * 1024 * 1024
         private const val PING_INTERVAL_NS = 15_000_000_000L
+        private const val STALL_NS = 25_000_000_000L
     }
 }

@@ -186,11 +186,13 @@ object Keys {
     const val REC_PRE_SEC = "record.preSec"
     const val REC_POST_SEC = "record.postSec"
     const val REC_MAX_CLIP_MIN = "record.maxClipMin"
-    const val REC_AUDIO = "record.audio"
     const val REC_STORAGE = "record.storage"
     const val REC_MIN_FREE_GB = "record.minFreeGb"
     const val REC_MAX_USAGE_GB = "record.maxUsageGb"
     const val REC_MAX_AGE_DAYS = "record.maxAgeDays"
+
+    const val AUDIO_ENABLED = "audio.enabled"
+    const val AUDIO_GAIN = "audio.gain"
 
     const val PORT = "net.port"
     const val USERNAME = "net.username"
@@ -276,6 +278,12 @@ object Schema {
                 help = "При нехватке места удаляются самые старые записи"),
             FloatSetting(Keys.REC_MAX_USAGE_GB, "Макс. объём записей", 0.0, 0.0, 2000.0, 1.0, unit = "ГБ", help = "0 — без ограничения"),
             IntSetting(Keys.REC_MAX_AGE_DAYS, "Хранить записи", 0, 0, 365, unit = "дн.", help = "0 — без ограничения"),
+        )),
+        SettingGroup("audio", "Звук", listOf(
+            BoolSetting(Keys.AUDIO_ENABLED, "Звук с микрофона", false,
+                help = "Добавляет звук в трансляцию и записи. Нужно разрешение на микрофон", apply = Apply.PIPELINE),
+            IntSetting(Keys.AUDIO_GAIN, "Усиление", 0, 0, 24, step = 3, unit = "дБ",
+                help = "Для тихих помещений", apply = Apply.PIPELINE),
         )),
         SettingGroup("network", "Доступ", listOf(
             IntSetting(Keys.PORT, "Порт веб-сервера", 8080, 1024, 65535, apply = Apply.SERVER),

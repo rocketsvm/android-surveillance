@@ -83,6 +83,8 @@ class GlRenderer(private val callbacks: Callbacks) {
     private val texMatrix = FloatArray(16)
     private var userMatrixDirty = true
     private var nextEncodeNs = 0L
+    /** Offset that moves camera timestamps onto CLOCK_MONOTONIC (shared with audio). */
+    private var clockOffsetNs: Long? = null
     private var firstFrame = true
     private var released = false
 
@@ -202,6 +204,7 @@ class GlRenderer(private val callbacks: Callbacks) {
         userMatrixDirty = true
         firstFrame = true
         nextEncodeNs = 0
+        clockOffsetNs = null
         val s = Surface(st)
         cameraSurface = s
         return s
@@ -238,7 +241,15 @@ class GlRenderer(private val callbacks: Callbacks) {
             e.makeCurrent(pbuffer!!)
             st.updateTexImage()
             st.getTransformMatrix(stMatrix)
-            val ts = st.timestamp
+            val raw = st.timestamp
+            // Camera timestamps are CLOCK_BOOTTIME on most devices, CLOCK_MONOTONIC on some:
+            // detect once and convert, so video and audio share one clock.
+            val offset = clockOffsetNs ?: run {
+                val mono = System.nanoTime()
+                val boot = android.os.SystemClock.elapsedRealtimeNanos()
+                (if (kotlin.math.abs(raw - boot) < kotlin.math.abs(raw - mono)) mono - boot else 0L).also { clockOffsetNs = it }
+            }
+            val ts = raw + offset
             if (userMatrixDirty) {
                 buildUserMatrix(c)
                 userMatrixDirty = false

@@ -31,6 +31,8 @@ class CapturePipeline(
     private val context: Context,
     private val engine: CoreEngine,
     val catalog: CameraCatalog,
+    /** Returns null if the microphone may be used now, otherwise the reason it may not. */
+    private val micGate: () -> String? = { "микрофон недоступен" },
 ) {
     private val thread = HandlerThread("capture").apply { start() }
     private val handler = Handler(thread.looper)
@@ -44,11 +46,12 @@ class CapturePipeline(
         val camera: CameraSource,
         val renderer: GlRenderer,
         val encoder: VideoEncoder,
+        val audio: AudioCapture?,
         val info: CameraInfo,
         val fpsRange: android.util.Range<Int>?,
         val rotation: Int,
         val autoRotation: Boolean,
-        val status: CameraStatus,
+        var status: CameraStatus,
     )
 
     @Volatile private var running: Running? = null
@@ -204,11 +207,30 @@ class CapturePipeline(
             val range = CameraCatalog.chooseFpsRange(cam, fps, s.bool(Keys.LOW_LIGHT_FPS))
             engine.setCameraStatus(CameraStatus("starting", null, cam.id, outW, outH, fps))
 
+            var audio: AudioCapture? = null
+            var audioError: String? = null
+            if (s.bool(Keys.AUDIO_ENABLED)) {
+                audioError = micGate()
+                if (audioError == null) {
+                    val a = AudioCapture(s.int(Keys.AUDIO_GAIN), audioListener(gen))
+                    try {
+                        a.start()
+                        audio = a
+                    } catch (e: Exception) {
+                        audioError = e.message ?: "микрофон недоступен"
+                    }
+                }
+            }
             val encoder = VideoEncoder(
                 outW, outH, fps, s.int(Keys.BITRATE), s.int(Keys.KEYFRAME_SEC),
-                s.string(Keys.PROFILE), s.string(Keys.BITRATE_MODE), encoderListener(gen),
+                s.string(Keys.PROFILE), s.string(Keys.BITRATE_MODE), encoderListener(gen, audio?.format),
             )
-            encoder.start()
+            try {
+                encoder.start()
+            } catch (e: Exception) {
+                audio?.stop()
+                throw e
+            }
             val renderer = GlRenderer(rendererCallbacks(gen))
             val cameraSurface = try {
                 renderer.start(
@@ -218,14 +240,23 @@ class CapturePipeline(
             } catch (e: Exception) {
                 renderer.release()
                 encoder.release()
+                audio?.stop()
                 throw e
             }
             renderer.setOverlay(overlay(s))
             renderer.setMotionIntervalMs(1000 / s.int(Keys.MOTION_FPS).coerceAtLeast(1))
             preview?.let { renderer.setPreview(it) }
             val camera = CameraSource(cameraManager, handler, cameraListener(gen))
-            val status = CameraStatus("running", null, cam.id, outW, outH, fps, encoder.codecName)
-            running = Running(camera, renderer, encoder, cam, range, rotation, autoRotation, status)
+            val status = CameraStatus(
+                "running", null, cam.id, outW, outH, fps, encoder.codecName,
+                audio = when {
+                    audio != null -> "on"
+                    s.bool(Keys.AUDIO_ENABLED) -> "error"
+                    else -> "off"
+                },
+                audioError = audioError,
+            )
+            running = Running(camera, renderer, encoder, audio, cam, range, rotation, autoRotation, status)
             camera.open(cam, cameraSurface, cameraParams(s, range))
             Log.i(TAG, "started camera ${cam.id} buffer=${camSize} out=${outW}x$outH rot=$rotation fps=$fps range=$range enc=${encoder.codecName}")
         } catch (e: Exception) {
@@ -238,6 +269,7 @@ class CapturePipeline(
         generation++
         val r = running ?: return
         running = null
+        r.audio?.stop()
         r.camera.close()
         r.renderer.release()
         r.encoder.release()
@@ -256,9 +288,9 @@ class CapturePipeline(
         }
     }
 
-    private fun encoderListener(gen: Int) = object : VideoEncoder.Listener {
+    private fun encoderListener(gen: Int, audioFormat: com.surveil.core.media.AudioFormat?) = object : VideoEncoder.Listener {
         override fun onFormat(format: VideoFormat) {
-            if (gen == generation) engine.onVideoFormat(format, null)
+            if (gen == generation) engine.onVideoFormat(format, audioFormat)
         }
 
         override fun onFrame(frame: MediaFrame) {
@@ -286,6 +318,22 @@ class CapturePipeline(
 
         override fun onError(t: Throwable) {
             handler.post { fail(gen, "Ошибка видеообработки: ${t.message}") }
+        }
+    }
+
+    private fun audioListener(gen: Int) = object : AudioCapture.Listener {
+        override fun onAudioFrame(frame: MediaFrame) {
+            if (gen == generation) engine.onFrame(frame)
+        }
+
+        override fun onAudioError(message: String) {
+            handler.post {
+                val r = running ?: return@post
+                if (gen != generation) return@post
+                // Video keeps going; only the status reports the problem.
+                r.status = r.status.copy(audio = "error", audioError = message)
+                engine.setCameraStatus(r.status)
+            }
         }
     }
 

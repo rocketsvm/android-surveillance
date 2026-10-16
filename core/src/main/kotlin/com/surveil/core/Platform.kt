@@ -32,6 +32,9 @@ data class CameraStatus(
     val height: Int = 0,
     val fps: Int = 0,
     val encoder: String? = null,
+    /** Audio: off | on | error (with [audioError]). */
+    val audio: String = "off",
+    val audioError: String? = null,
 )
 
 /** Everything the device-independent core needs from the host (Android or the desktop harness). */

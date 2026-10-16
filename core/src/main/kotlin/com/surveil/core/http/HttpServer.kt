@@ -79,8 +79,11 @@ class HttpServer(
         }
     }
 
+    private val currentSocket = ThreadLocal<Socket>()
+
     private fun serve(socket: Socket) {
         sockets += socket
+        currentSocket.set(socket)
         try {
             socket.tcpNoDelay = true
             socket.soTimeout = IDLE_TIMEOUT_MS
@@ -112,6 +115,7 @@ class HttpServer(
         } catch (e: Throwable) {
             log("connection error: $e")
         } finally {
+            currentSocket.remove()
             sockets -= socket
             runCatching { socket.close() }
         }
@@ -201,6 +205,7 @@ class HttpServer(
             }
             is HttpResponse.FileBody -> return writeFile(req, resp, out, keep)
             is HttpResponse.Stream -> {
+                val socket = currentSocket.get()
                 val head = StringBuilder()
                 statusLine(head, 200)
                 header(head, "Content-Type", resp.contentType)
@@ -210,7 +215,7 @@ class HttpServer(
                 out.flush()
                 if (!req.isHead) {
                     try {
-                        resp.writer(out)
+                        resp.writer(if (socket != null) StreamOutput(out, socket) else out)
                         out.flush()
                     } catch (_: IOException) {
                     }
