@@ -1,7 +1,7 @@
 // Headless-Chrome smoke test for the web UI via the DevTools protocol (Node 22+, no packages).
 //
 //   node tools/browser-check.mjs <url> [--wait 8] [--shot out.png] [--width 1400 --height 900] [--mobile]
-//                                [--eval "js expression"] [--chrome path]
+//                                [--eval "js expression"] [--before "js" --then 6] [--chrome path]
 //
 // Prints video element state (resolution, decoded frames, buffer lag), console errors and the
 // result of --eval; saves a screenshot if --shot is given.
@@ -79,6 +79,12 @@ await send('Page.enable');
 await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: flag('mobile') ? 2 : 1, mobile: flag('mobile') });
 await send('Page.navigate', { url });
 await sleep(waitSec * 1000);
+// Optional interaction before measuring, e.g. filling a login form: --before "js" [--then 6]
+const before = opt('before');
+if (before) {
+  console.log('before:', JSON.stringify(await evaluate(before)));
+  await sleep(Number(opt('then', '6')) * 1000);
+}
 
 const state = await evaluate(`(() => {
   const v = document.querySelector('#video') || document.querySelector('video');

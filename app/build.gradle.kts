@@ -32,6 +32,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Same key as release when available, so debug and release builds install over each other.
+            signingConfigs.findByName("release")?.let { signingConfig = it }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
