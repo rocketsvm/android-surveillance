@@ -1,0 +1,26 @@
+# Original draft archive (kept locally as reference material only)
+/SurveillanceCamera.zip
+
+# Gradle / Kotlin / IDE
+.gradle/
+.kotlin/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing material never goes into git
+*.jks
+*.keystore
+keystore.properties
+
+# Dev-server scratch data
+/devdata/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
