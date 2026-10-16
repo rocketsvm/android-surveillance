@@ -14,6 +14,7 @@ import com.surveil.core.settings.Keys
 import com.surveil.core.settings.Option
 import com.surveil.core.settings.Settings
 import com.surveil.core.settings.SettingsStore
+import com.surveil.core.web.WebApi
 import java.io.File
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -29,6 +30,7 @@ import kotlin.random.Random
 fun main(args: Array<String>) {
     val dataDir = File(args.getOrNull(0) ?: (System.getProperty("user.home") + "/.build/SurveillanceCamera/devdata"))
     val port = args.getOrNull(1)?.toIntOrNull() ?: 8080
+    File("core/src/main/resources/web").takeIf { it.isDirectory }?.let { WebApi.devWebRoot = it.absoluteFile }
     val platform = FakePlatform(dataDir)
     val store = SettingsStore(File(dataDir, "settings.json"))
     if (store.current.port != port) store.set(Keys.PORT, port)

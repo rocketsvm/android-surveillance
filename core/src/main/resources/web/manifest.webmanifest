@@ -1,0 +1,9 @@
+{
+  "name": "Камера наблюдения",
+  "short_name": "Камера",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1016",
+  "theme_color": "#0d1016",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

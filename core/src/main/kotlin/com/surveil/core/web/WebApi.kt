@@ -240,7 +240,8 @@ class WebApi(private val engine: CoreEngine) {
         if (req.method != "GET" && req.method != "HEAD") return HttpResponse.notFound()
         val path = if (req.path == "/" || req.path.isEmpty()) "/index.html" else req.path
         if (path.contains("..")) return HttpResponse.notFound()
-        val asset = assets.getOrPut(path) { loadAsset(path) } ?: return HttpResponse.notFound()
+        val asset = (if (devWebRoot != null) loadAsset(path) else assets.getOrPut(path) { loadAsset(path) })
+            ?: return HttpResponse.notFound()
         val (bytes, etag) = asset
         if (req.header("if-none-match") == etag) {
             return HttpResponse.Bytes(304, null, ByteArray(0)).header("ETag", etag)
@@ -251,7 +252,8 @@ class WebApi(private val engine: CoreEngine) {
     }
 
     private fun loadAsset(path: String): Pair<ByteArray, String>? {
-        val stream = WebApi::class.java.getResourceAsStream("/web$path") ?: return null
+        val stream = devWebRoot?.let { root -> java.io.File(root, path.removePrefix("/")).takeIf { it.isFile }?.inputStream() }
+            ?: WebApi::class.java.getResourceAsStream("/web$path") ?: return null
         val bytes = stream.use { it.readBytes() }
         val crc = CRC32().apply { update(bytes) }.value
         return bytes to "\"${crc.toString(16)}\""
@@ -263,4 +265,9 @@ class WebApi(private val engine: CoreEngine) {
 
     private fun parseObject(req: HttpRequest): JsonObject? =
         runCatching { json.parseToJsonElement(req.bodyText()) as? JsonObject }.getOrNull()
+
+    companion object {
+        /** Development only: serve the web UI straight from this directory, uncached. */
+        @Volatile var devWebRoot: java.io.File? = null
+    }
 }
