@@ -141,7 +141,8 @@ class MotionDetector {
 
         // Keep changed pixels that have support in their 3x3 neighbourhood.
         var count = 0
-        var minX = width; var minY = height; var maxX = -1; var maxY = -1
+        val colHist = IntArray(width)
+        val rowHist = IntArray(height)
         for (y in 0 until height) {
             for (x in 0 until width) {
                 val i = y * width + x
@@ -158,10 +159,8 @@ class MotionDetector {
                 }
                 if (support >= 4) {
                     count++
-                    if (x < minX) minX = x
-                    if (x > maxX) maxX = x
-                    if (y < minY) minY = y
-                    if (y > maxY) maxY = y
+                    colHist[x]++
+                    rowHist[y]++
                 }
             }
         }
@@ -192,11 +191,27 @@ class MotionDetector {
             hits = 0
             if (active && timeMs - lastMotionMs > RELEASE_MS) active = false
         }
-        val box = if (maxX >= 0 && frameMotion) floatArrayOf(
-            minX.toFloat() / width, minY.toFloat() / height,
-            (maxX - minX + 1).toFloat() / width, (maxY - minY + 1).toFloat() / height,
-        ) else null
+        val box = if (count > 0 && frameMotion) {
+            // 2nd..98th percentile of the changed pixels: stray noise does not stretch the box.
+            val (x0, x1) = percentileRange(colHist, count)
+            val (y0, y1) = percentileRange(rowHist, count)
+            floatArrayOf(
+                x0.toFloat() / width, y0.toFloat() / height,
+                (x1 - x0 + 1).toFloat() / width, (y1 - y0 + 1).toFloat() / height,
+            )
+        } else null
         return MotionResult(score, active, box, false)
+    }
+
+    private fun percentileRange(hist: IntArray, total: Int): Pair<Int, Int> {
+        val cut = (total * 0.02).toInt()
+        var acc = 0
+        var lo = 0
+        while (lo < hist.size - 1 && acc + hist[lo] <= cut) acc += hist[lo++]
+        acc = 0
+        var hi = hist.size - 1
+        while (hi > lo && acc + hist[hi] <= cut) acc += hist[hi--]
+        return lo to hi
     }
 
     private fun activeMask(zones: ZoneMask?): BooleanArray {

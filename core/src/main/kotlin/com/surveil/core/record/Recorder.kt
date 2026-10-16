@@ -57,9 +57,12 @@ class Recorder(
     private var clip: Clip? = null
     private var clipTrigger = ""
     private var clipStartWallMs = 0L
+    private var clipStartPtsUs = 0L
     private var clipPeakMotion = 0f
     private var motionActive = false
-    private var lastMotionNs = 0L
+    /** Recorder time = timestamp of the latest frame, so decisions follow the stream, not wall clock. */
+    private var nowUs = 0L
+    private var lastMotionUs = Long.MIN_VALUE / 2
     private var lastMotionScore = 0f
     private var lastCleanupNs = 0L
 
@@ -120,6 +123,8 @@ class Recorder(
                         clearPreroll()
                         video = cmd.video
                         audio = cmd.audio
+                        nowUs = 0
+                        lastMotionUs = Long.MIN_VALUE / 2
                     }
                     Cmd.Stop -> {
                         finishClip()
@@ -129,7 +134,7 @@ class Recorder(
                     is Cmd.Motion -> {
                         motionActive = cmd.active
                         if (cmd.active) {
-                            lastMotionNs = System.nanoTime()
+                            lastMotionUs = nowUs
                             lastMotionScore = cmd.score
                         }
                         if (writer != null && cmd.score > clipPeakMotion) clipPeakMotion = cmd.score
@@ -151,12 +156,12 @@ class Recorder(
         }
     }
 
-    private fun shouldRecord(s: Settings, nowNs: Long): Boolean {
+    private fun shouldRecord(s: Settings): Boolean {
         if (manual) return true
         return when (s.string(Keys.REC_MODE)) {
             "continuous" -> true
             "motion" -> s.bool(Keys.MOTION_ENABLED) &&
-                (motionActive || nowNs - lastMotionNs < s.int(Keys.REC_POST_SEC) * 1_000_000_000L)
+                (motionActive || nowUs - lastMotionUs < s.int(Keys.REC_POST_SEC) * 1_000_000L)
             else -> false
         }
     }
@@ -170,22 +175,22 @@ class Recorder(
     private fun frame(f: MediaFrame) {
         val v = video ?: return
         val s = settings()
-        val now = System.nanoTime()
+        if (f.ptsUs > nowUs) nowUs = f.ptsUs
         addToPreroll(f, s.int(Keys.REC_PRE_SEC))
 
         val w = writer
         if (w != null) {
-            if (f.isVideoKey && w.durationUs >= s.int(Keys.REC_MAX_CLIP_MIN) * 60_000_000L) {
+            if (f.isVideoKey && f.ptsUs - clipStartPtsUs >= s.int(Keys.REC_MAX_CLIP_MIN) * 60_000_000L) {
                 // Split long recordings at a keyframe; the new file starts with this frame.
                 finishClip()
-                if (shouldRecord(s, now)) startClip(v, s, listOf(f))
+                if (shouldRecord(s)) startClip(v, s, listOf(f))
                 return
             }
             w.write(f)
-            if (!shouldRecord(s, now)) finishClip()
+            if (!shouldRecord(s)) finishClip()
             return
         }
-        if (!shouldRecord(s, now)) return
+        if (!shouldRecord(s)) return
         if (s.int(Keys.REC_PRE_SEC) > 0 && preroll.isNotEmpty() && preroll.first().isVideoKey) {
             startClip(v, s, preroll.toList())
         } else if (f.isVideoKey) {
@@ -206,6 +211,7 @@ class Recorder(
         clip = c
         clipTrigger = trigger
         clipStartWallMs = startWall
+        clipStartPtsUs = initial.first().ptsUs
         clipPeakMotion = if (trigger == "motion") lastMotionScore else 0f
         repo.activeId = c.id
         currentClipId = c.id
@@ -257,8 +263,7 @@ class Recorder(
 
     private fun idle() {
         val s = settings()
-        val now = System.nanoTime()
-        if (writer != null && !shouldRecord(s, now)) finishClip()
+        if (writer != null && !shouldRecord(s)) finishClip()
         maybeCleanup(s, force = false)
     }
 

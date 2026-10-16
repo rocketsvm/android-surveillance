@@ -302,7 +302,9 @@ class Mp4FileWriter private constructor(
                 return null
             }
             val result = runCatching {
-                DataInputStream(jf.inputStream().buffered()).use { j ->
+                // Read the whole journal first: an open file cannot be deleted on Windows.
+                val journalBytes = jf.readBytes()
+                DataInputStream(journalBytes.inputStream()).use { j ->
                     require(j.readInt() == MAGIC) { "bad journal" }
                     val sps = ByteArray(j.readUnsignedShort()).also { j.readFully(it) }
                     val pps = ByteArray(j.readUnsignedShort()).also { j.readFully(it) }

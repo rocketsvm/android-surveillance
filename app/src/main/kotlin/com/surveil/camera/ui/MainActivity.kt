@@ -147,6 +147,8 @@ class MainActivity : ComponentActivity() {
             while (true) {
                 delay(4000)
                 addresses = DeviceInfo.networkAddresses(this@MainActivity)
+                overlayGranted = Settings.canDrawOverlays(this@MainActivity)
+                batteryOptimized = !DeviceInfo.isIgnoringBatteryOptimizations(this@MainActivity)
             }
         }
         // The camera starts with the app (unless the user stopped it explicitly).

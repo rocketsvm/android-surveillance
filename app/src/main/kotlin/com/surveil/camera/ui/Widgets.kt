@@ -149,13 +149,19 @@ fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         for (a in v4) {
             val url = "http://${a.address}:$port"
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(url, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                    Text("${kindLabel(a.kind)} · ${a.iface}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column {
+                Text(
+                    url, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium, maxLines = 1, softWrap = false,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${kindLabel(a.kind)} · ${a.iface}", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f),
+                    )
+                    IconButton(onClick = { copyToClipboard(context, url) }) { Icon(Icons.Filled.ContentCopy, "Копировать") }
+                    IconButton(onClick = { qrFor = url }) { Icon(Icons.Filled.QrCode2, "QR-код") }
                 }
-                IconButton(onClick = { copyToClipboard(context, url) }) { Icon(Icons.Filled.ContentCopy, "Копировать") }
-                IconButton(onClick = { qrFor = url }) { Icon(Icons.Filled.QrCode2, "QR-код") }
             }
         }
         if (showVlc) {
@@ -183,15 +189,17 @@ fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true)
     }
 }
 
+/** Small status pill. [solid] is for placement over video, where a tinted pill would be unreadable. */
 @Composable
-fun StatusChip(text: String, color: Color, modifier: Modifier = Modifier, dot: Boolean = true) {
-    Surface(color = color.copy(alpha = 0.16f), shape = RoundedCornerShape(50), modifier = modifier) {
+fun StatusChip(text: String, color: Color, modifier: Modifier = Modifier, dot: Boolean = true, solid: Boolean = false) {
+    val fg = if (solid) Color.White else color
+    Surface(color = if (solid) color.copy(alpha = 0.9f) else color.copy(alpha = 0.16f), shape = RoundedCornerShape(50), modifier = modifier) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
             if (dot) {
-                Box(Modifier.size(8.dp).background(color, RoundedCornerShape(50)))
+                Box(Modifier.size(8.dp).background(fg, RoundedCornerShape(50)))
                 Spacer(Modifier.width(6.dp))
             }
-            Text(text, color = color, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+            Text(text, color = fg, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
         }
     }
 }

@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,8 +53,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,6 +73,7 @@ import com.surveil.core.EngineStatus
 import com.surveil.core.NetAddress
 import com.surveil.core.settings.Keys
 import com.surveil.core.settings.Settings
+import kotlinx.coroutines.delay
 
 /** State gathered by [MainActivity] for the screens. */
 class HomeState(
@@ -204,8 +209,8 @@ private fun PreviewCard(state: HomeState, actions: HomeActions, modifier: Modifi
         }
         if (state.running) {
             Row(Modifier.align(Alignment.BottomStart).padding(10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (state.status.recordingId != null) StatusChip("REC", Palette.Rec)
-                if (state.status.motionActive) StatusChip("Движение", Palette.Motion)
+                if (state.status.recordingId != null) StatusChip("REC", Palette.Rec, solid = true)
+                if (state.status.motionActive) StatusChip("Движение", Palette.Motion, solid = true)
             }
             if (previewOn) {
                 IconButton(
@@ -217,45 +222,46 @@ private fun PreviewCard(state: HomeState, actions: HomeActions, modifier: Modifi
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ControlsCard(state: HomeState, actions: HomeActions) {
     val s = state.settings
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             CardTitle("Запись")
-            val modes = listOf("off" to "Не писать", "motion" to "По движению", "continuous" to "Всегда")
+            val modes = listOf("off" to "Выкл", "motion" to "Движение", "continuous" to "Всегда")
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 modes.forEachIndexed { i, (value, label) ->
                     SegmentedButton(
                         selected = s.string(Keys.REC_MODE) == value,
                         onClick = { App.settings.set(Keys.REC_MODE, value) },
                         shape = SegmentedButtonDefaults.itemShape(i, modes.size),
-                        label = { Text(label, maxLines = 1) },
+                        icon = {},
+                        label = { Text(label, maxLines = 1, softWrap = false) },
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val manual = state.status.manualRecording
                 FilledTonalButton(
                     onClick = { actions.setManual(!manual) },
-                    modifier = Modifier.weight(1f),
                     colors = if (manual) ButtonDefaults.filledTonalButtonColors(containerColor = Palette.Rec, contentColor = Color.White)
                     else ButtonDefaults.filledTonalButtonColors(),
                 ) {
                     Icon(if (manual) Icons.Filled.Stop else Icons.Filled.FiberManualRecord, null, tint = if (manual) Color.White else Palette.Rec)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (manual) "Стоп" else "Записать")
+                    Text(if (manual) "Остановить запись" else "Записать сейчас", maxLines = 1, softWrap = false)
                 }
                 val torch = s.bool(Keys.TORCH)
-                FilledTonalButton(onClick = { App.settings.set(Keys.TORCH, !torch) }, modifier = Modifier.weight(1f)) {
+                FilledTonalButton(onClick = { App.settings.set(Keys.TORCH, !torch) }) {
                     Icon(if (torch) Icons.Filled.FlashlightOn else Icons.Filled.FlashlightOff, null)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (torch) "Свет вкл" else "Свет")
+                    Text(if (torch) "Фонарик вкл" else "Фонарик", maxLines = 1, softWrap = false)
                 }
-                FilledTonalButton(onClick = actions.dimScreen, modifier = Modifier.weight(1f)) {
+                FilledTonalButton(onClick = actions.dimScreen) {
                     Icon(Icons.Filled.Bedtime, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("Экран", maxLines = 1)
+                    Text("Погасить экран", maxLines = 1, softWrap = false)
                 }
             }
             val motionText = when {
@@ -360,9 +366,17 @@ private fun ServiceCard(state: HomeState, actions: HomeActions) {
     }
 }
 
-/** Black full-screen overlay at minimum brightness; the camera keeps running. Tap to exit. */
+/**
+ * Black full-screen overlay at minimum brightness; the camera keeps running. The hint disappears
+ * after a few seconds so nothing static stays lit on an OLED panel for hours. Tap to exit.
+ */
 @Composable
 fun DimOverlay(onExit: () -> Unit) {
+    var hint by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(5000)
+        hint = false
+    }
     Box(
         Modifier
             .fillMaxSize()
@@ -370,7 +384,7 @@ fun DimOverlay(onExit: () -> Unit) {
             .clickable(onClick = onExit),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Text(
+        if (hint) Text(
             "Камера работает. Коснитесь экрана, чтобы выйти.",
             color = Color.White.copy(alpha = 0.25f),
             modifier = Modifier.padding(32.dp),

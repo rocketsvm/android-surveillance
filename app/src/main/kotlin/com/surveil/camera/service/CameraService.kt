@@ -69,6 +69,7 @@ class CameraService : LifecycleService() {
             stopSelf()
             return
         }
+        BootNotifier.cancel(this)
         acquireLocks()
         val catalog = CameraCatalog(this)
         val platform = AndroidPlatform(this, catalog)
@@ -180,7 +181,7 @@ class CameraService : LifecycleService() {
     }
 
     companion object {
-        private const val TAG = "CameraService"
+        private const val TAG = "SurveilService"
         const val NOTIFICATION_ID = 1
         const val ACTION_STOP = "com.surveil.camera.STOP"
 
