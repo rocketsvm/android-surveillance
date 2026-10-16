@@ -107,6 +107,9 @@ class CoreEngine(
     @Volatile private var motionScore = 0f
     @Volatile private var motionBox: FloatArray? = null
     @Volatile private var motionWarmupUntilMs = Long.MAX_VALUE
+    @Volatile private var lastVideoFrameNs = 0L
+    @Volatile private var runningSinceNs = 0L
+    private var lastWatchdogRestartNs = 0L
     private var motionStartMs = 0L
     private var motionPeak = 0f
     private var lastMotionPushNs = 0L
@@ -138,6 +141,7 @@ class CoreEngine(
         ticker = Thread({
             while (running) {
                 runCatching { publishStatus() }
+                runCatching { checkStreamStall() }
                 try { Thread.sleep(1000) } catch (_: InterruptedException) { break }
             }
         }, "status-ticker").apply { isDaemon = true; start() }
@@ -165,7 +169,10 @@ class CoreEngine(
         hub.setFormat(video, audio)
     }
 
-    fun onFrame(frame: MediaFrame) = hub.push(frame)
+    fun onFrame(frame: MediaFrame) {
+        if (frame.track == Track.VIDEO) lastVideoFrameNs = System.nanoTime()
+        hub.push(frame)
+    }
 
     fun onStreamStopped() {
         motionWarmupUntilMs = Long.MAX_VALUE
@@ -175,6 +182,7 @@ class CoreEngine(
     fun setCameraStatus(s: CameraStatus) {
         val prev = cameraStatus
         cameraStatus = s
+        if (s.state == "running" && prev.state != "running") runningSinceNs = System.nanoTime()
         if (s.state == "error" && (prev.state != "error" || prev.error != s.error)) {
             events.add("camera", "Ошибка камеры: ${s.error ?: "неизвестно"}")
             if (prev.state != "error") {
@@ -219,6 +227,20 @@ class CoreEngine(
     fun setManualRecording(on: Boolean) {
         recorder.setManual(on)
         events.add("recording", if (on) "Ручная запись включена" else "Ручная запись выключена")
+    }
+
+    /**
+     * Some camera HALs and encoders freeze without reporting an error. If the camera claims to be
+     * running but no video frame arrived for a while, restart the capture chain.
+     */
+    private fun checkStreamStall() {
+        if (cameraStatus.state != "running") return
+        val now = System.nanoTime()
+        val lastActivity = maxOf(lastVideoFrameNs, runningSinceNs)
+        if (now - lastActivity < STALL_RESTART_NS || now - lastWatchdogRestartNs < 2 * STALL_RESTART_NS) return
+        lastWatchdogRestartNs = now
+        events.add("camera", "Видеопоток остановился — перезапуск камеры")
+        platform.restartCamera()
     }
 
     // ---- motion ----
@@ -482,6 +504,7 @@ class CoreEngine(
 
     companion object {
         private const val MOTION_WARMUP_MS = 3000L
+        private const val STALL_RESTART_NS = 15_000_000_000L
     }
 
     /** Measures delivered fps and bitrate over a sliding window. */
