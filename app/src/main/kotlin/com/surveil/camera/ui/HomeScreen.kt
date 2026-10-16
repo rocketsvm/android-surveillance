@@ -285,7 +285,7 @@ private fun ConnectCard(state: HomeState) {
                 "Откройте адрес в браузере на компьютере или другом телефоне в той же Wi-Fi сети. Там же — записи и все настройки.",
                 style = MaterialTheme.typography.bodyMedium,
             )
-            AddressList(state.addresses, port)
+            AddressList(state.addresses, port, rtspPort = state.settings.takeIf { it.bool(Keys.RTSP_ENABLED) }?.int(Keys.RTSP_PORT))
             if (state.status.serverError != null) {
                 Text(state.status.serverError!!, color = MaterialTheme.colorScheme.error)
             }

@@ -261,6 +261,9 @@ main { max-width: 1440px; margin: 0 auto; padding: 20px; }
 /* ---------- settings ---------- */
 .settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 18px; align-items: start; }
 .group h2 { font-size: 16px; margin: 0 0 6px; }
+.group-notice { font-size: 13.5px; padding: 8px 10px; border-radius: 8px; margin: 6px 0 4px; }
+.group-notice.warn { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+.group-notice.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
 .field { padding: 12px 0; border-bottom: 1px solid var(--border); }
 .field:last-child { border-bottom: 0; padding-bottom: 2px; }
 .field-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }

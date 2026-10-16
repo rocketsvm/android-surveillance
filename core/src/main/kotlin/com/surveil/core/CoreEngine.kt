@@ -89,6 +89,8 @@ class CoreEngine(
         freeBytes = { selectedRoot().freeBytes },
     )
     private val web = WebApi(this)
+    val rtsp = com.surveil.core.rtsp.RtspServer(hub, { h -> auth.checkBasic(h, "rtsp") }, platform::log)
+    @Volatile private var rtspError: String? = null
     private val detector = MotionDetector()
     private val motionExec = Executors.newSingleThreadExecutor { r -> Thread(r, "motion").apply { isDaemon = true } }
     private val motionBusy = AtomicBoolean(false)
@@ -123,6 +125,7 @@ class CoreEngine(
         recorder.start()
         events.listener = { e -> bus.broadcast(eventJson(e).toString()) }
         startServer(settings.port)
+        startRtsp(settings)
         scope.launch {
             var previous = settingsStore.current
             settingsStore.flow.collect { s ->
@@ -148,6 +151,7 @@ class CoreEngine(
         hub.stop()
         recorder.shutdown()
         web.stop()
+        rtsp.stop()
         motionExec.shutdownNow()
         scope.cancel()
     }
@@ -266,8 +270,14 @@ class CoreEngine(
             // Give the HTTP response to the settings request a moment to go out first.
             scope.launch {
                 kotlinx.coroutines.delay(500)
-                web.stop()
-                startServer(s.port)
+                if (Keys.PORT in changed) {
+                    web.stop()
+                    startServer(s.port)
+                }
+                if (Keys.RTSP_ENABLED in changed || Keys.RTSP_PORT in changed) {
+                    rtsp.stop()
+                    startRtsp(s)
+                }
             }
         }
         if (Keys.MOTION_ZONES in changed || Keys.MOTION_ENABLED in changed) detector.reset()
@@ -282,6 +292,17 @@ class CoreEngine(
             "Порт $port занят или недоступен"
         }
         publishStatus()
+    }
+
+    private fun startRtsp(s: Settings) {
+        rtspError = null
+        if (!s.bool(Keys.RTSP_ENABLED)) return
+        try {
+            rtsp.start(s.int(Keys.RTSP_PORT))
+        } catch (e: Exception) {
+            platform.log("rtsp start failed: $e")
+            rtspError = "Порт RTSP ${s.int(Keys.RTSP_PORT)} занят"
+        }
     }
 
     val serverPort: Int get() = web.port
@@ -379,6 +400,12 @@ class CoreEngine(
             })
             put("port", st.serverPort)
             st.serverError?.let { put("serverError", it) }
+            putJsonObject("rtsp") {
+                put("enabled", s.bool(Keys.RTSP_ENABLED))
+                put("port", rtsp.port)
+                put("clients", rtsp.clients)
+                rtspError?.let { put("error", it) }
+            }
             put("authRequired", s.authEnabled)
         }
     }

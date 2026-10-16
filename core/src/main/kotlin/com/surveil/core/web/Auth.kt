@@ -36,14 +36,21 @@ class AuthManager(private val settings: SettingsStore, private val file: File) {
         checkCredentialsChanged()
         val now = System.currentTimeMillis()
         req.cookie(COOKIE)?.let { t -> sessions[t]?.let { if (it > now) return true } }
-        val header = req.header("authorization") ?: return false
-        if (!header.startsWith("Basic ", ignoreCase = true)) return false
+        return checkBasic(req.header("authorization"), req.remote.hostAddress ?: "")
+    }
+
+    /** HTTP Basic check for non-browser clients (RTSP, VLC, NVRs); true if no password is set. */
+    fun checkBasic(header: String?, ip: String): Boolean {
+        if (!required) return true
+        checkCredentialsChanged()
+        if (header == null || !header.startsWith("Basic ", ignoreCase = true)) return false
+        val now = System.currentTimeMillis()
         val digest = sha256(header)
         basicCache[digest]?.let { if (it > now) return true }
         val decoded = runCatching { String(Base64.getDecoder().decode(header.substring(6).trim()), Charsets.UTF_8) }.getOrNull() ?: return false
         val colon = decoded.indexOf(':')
         if (colon < 0) return false
-        val ok = verify(decoded.substring(0, colon), decoded.substring(colon + 1), req.remote.hostAddress ?: "")
+        val ok = runCatching { verify(decoded.substring(0, colon), decoded.substring(colon + 1), ip) }.getOrDefault(false)
         if (ok) basicCache[digest] = now + 10 * 60_000L
         return ok
     }

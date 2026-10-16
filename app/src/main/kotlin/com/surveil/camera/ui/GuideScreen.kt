@@ -123,7 +123,7 @@ fun GuideScreen(state: GuideState, actions: GuideActions) {
                     )
                     Spacer(Modifier.height(6.dp))
                     val port = if (home.status.serverPort > 0) home.status.serverPort else home.settings.port
-                    AddressList(home.addresses, port)
+                    AddressList(home.addresses, port, rtspPort = home.settings.takeIf { it.bool(Keys.RTSP_ENABLED) }?.int(Keys.RTSP_PORT))
                     Hint(
                         "Доступ через интернет: установите VPN (например, Tailscale или ZeroTier) на этот телефон и на устройство, " +
                             "с которого смотрите, — адрес VPN появится в списке. Не открывайте порт на роутере без пароля.",

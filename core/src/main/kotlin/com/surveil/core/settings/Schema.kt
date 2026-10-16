@@ -195,6 +195,8 @@ object Keys {
     const val AUDIO_GAIN = "audio.gain"
 
     const val PORT = "net.port"
+    const val RTSP_ENABLED = "net.rtsp"
+    const val RTSP_PORT = "net.rtspPort"
     const val USERNAME = "net.username"
     const val PASSWORD = "net.password"
 }
@@ -287,6 +289,9 @@ object Schema {
         )),
         SettingGroup("network", "Доступ", listOf(
             IntSetting(Keys.PORT, "Порт веб-сервера", 8080, 1024, 65535, apply = Apply.SERVER),
+            BoolSetting(Keys.RTSP_ENABLED, "RTSP-сервер", true,
+                help = "Поток rtsp://<адрес>:8554/live для видеорегистраторов, VLC, Home Assistant", apply = Apply.SERVER),
+            IntSetting(Keys.RTSP_PORT, "Порт RTSP", 8554, 1024, 65535, apply = Apply.SERVER, advanced = true),
             TextSetting(Keys.USERNAME, "Имя пользователя", "admin", maxLength = 32),
             TextSetting(Keys.PASSWORD, "Пароль", "", maxLength = 64, secret = true, help = "Пусто — вход без пароля"),
         )),

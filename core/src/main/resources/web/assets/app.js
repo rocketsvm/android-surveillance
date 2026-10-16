@@ -239,7 +239,7 @@ function updateStatus(st) {
   $('#logout-btn').hidden = !st.authRequired;
   if (st.motion) updateMotion(st.motion);
   if (cam.state === 'error' && S.view === 'live') stageMessage('Ошибка камеры: ' + (cam.error || 'неизвестно'), true);
-  if (S.view === 'settings') renderInfo();
+  if (S.view === 'settings') { renderInfo(); renderNotices(); }
 }
 
 function updateFromValues() {
@@ -603,9 +603,30 @@ function renderSettings() {
   root.textContent = '';
   root.classList.toggle('show-adv', $('#show-advanced').checked);
   for (const g of S.groups || []) {
-    const card = h('div', { class: 'card group' }, h('h2', { text: g.title }));
+    const card = h('div', { class: 'card group', 'data-group': g.id }, h('h2', { text: g.title }));
+    card.append(h('div', { class: 'group-notice', hidden: true }));
     for (const def of g.settings) card.append(renderField(def));
     root.append(card);
+  }
+  renderNotices();
+}
+
+/** Live state next to the related settings (e.g. why the microphone is not recording). */
+function renderNotices() {
+  const st = S.status;
+  const audio = $('[data-group="audio"] .group-notice');
+  if (!audio || !st || !st.camera) return;
+  const cam = st.camera;
+  if (cam.audio === 'error') {
+    audio.hidden = false;
+    audio.className = 'group-notice warn';
+    audio.textContent = 'Звук не записывается: ' + (cam.audioError || 'микрофон недоступен');
+  } else if (cam.audio === 'on') {
+    audio.hidden = false;
+    audio.className = 'group-notice ok';
+    audio.textContent = 'Микрофон работает';
+  } else {
+    audio.hidden = true;
   }
 }
 
@@ -712,11 +733,17 @@ function renderInfo() {
   card.append(h('div', { class: 'card-title', text: 'Веб-интерфейс' }), list);
   const host = (st.network || []).find((x) => !x.ipv6);
   if (host) {
-    const vlc = `http://${host.address}:${port}/live.mp4`;
-    const copy = h('button', { class: 'icon-btn', title: 'Копировать' }, icon('copy'));
-    copy.onclick = () => copyText(vlc);
-    card.append(h('div', { class: 'card-title', text: 'Поток для VLC / видеорегистратора' }),
-      h('div', { class: 'addr-list' }, h('div', { class: 'addr' }, h('code', { text: vlc }), copy)));
+    const streams = [];
+    if (st.rtsp && st.rtsp.enabled && st.rtsp.port) streams.push([`rtsp://${host.address}:${st.rtsp.port}/live`, 'RTSP']);
+    streams.push([`http://${host.address}:${port}/live.mp4`, 'HTTP']);
+    const list2 = h('div', { class: 'addr-list' });
+    for (const [url, kind] of streams) {
+      const copy = h('button', { class: 'icon-btn', title: 'Копировать' }, icon('copy'));
+      copy.onclick = () => copyText(url);
+      list2.append(h('div', { class: 'addr' }, h('code', { text: url }), copy, h('span', { class: 'kind', text: kind })));
+    }
+    card.append(h('div', { class: 'card-title', text: 'Поток для VLC, видеорегистратора, Home Assistant' }), list2);
+    if (st.rtsp && st.rtsp.error) card.append(h('div', { class: 'group-notice warn', text: st.rtsp.error }));
   }
   const d = st.device || {};
   card.append(h('dl', { class: 'kv' },

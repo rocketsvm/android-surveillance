@@ -134,7 +134,7 @@ fun kindLabel(kind: String): String = when (kind) {
 
 /** List of URLs to open on another device, with copy and QR buttons. */
 @Composable
-fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true) {
+fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true, rtspPort: Int? = null) {
     val context = LocalContext.current
     var qrFor by remember { mutableStateOf<String?>(null) }
     val v4 = addresses.filter { !it.ipv6 && it.kind != "mobile" }
@@ -165,11 +165,13 @@ fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true)
             }
         }
         if (showVlc) {
-            Text(
-                "Для VLC и видеорегистраторов: http://${v4.first().address}:$port/live.mp4",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            val host = v4.first().address
+            val text = buildString {
+                append("Для VLC и видеорегистраторов:")
+                if (rtspPort != null) append("\nrtsp://$host:$rtspPort/live")
+                append("\nhttp://$host:$port/live.mp4")
+            }
+            Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
     qrFor?.let { url ->
