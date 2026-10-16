@@ -176,13 +176,15 @@ fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true,
     }
     qrFor?.let { url ->
         val bmp = remember(url) { qrBitmap(url) }
+        // Landscape phones have ~400 dp of height: keep title, code and address on screen.
+        val qrSize = minOf(260, (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.42f).toInt()).dp
         AlertDialog(
             onDismissRequest = { qrFor = null },
             confirmButton = { TextButton(onClick = { qrFor = null }) { Text("Закрыть") } },
             title = { Text("Наведите камеру другого телефона") },
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Image(bmp, null, Modifier.size(260.dp).background(Color.White).padding(6.dp))
+                    Image(bmp, null, Modifier.size(qrSize).background(Color.White).padding(6.dp))
                     Spacer(Modifier.height(10.dp))
                     Text(url, fontFamily = FontFamily.Monospace)
                 }

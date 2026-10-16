@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -92,9 +94,11 @@ fun ZoneEditor(onClose: () -> Unit) {
                 "Проведите пальцем по клеткам, которые нужно исключить из детекции (дорога, деревья, телевизор). Исключённые клетки — красные.",
                 style = MaterialTheme.typography.bodyMedium,
             )
-            val aspect = image?.let { it.width.toFloat() / it.height } ?: (cols.toFloat() / rows * 9f / 9f)
+            val aspect = image?.let { it.width.toFloat() / it.height } ?: (cols.toFloat() / rows)
             var paintValue by remember { mutableStateOf<Boolean?>(null) }
-            Box(Modifier.fillMaxWidth().aspectRatio(aspect).background(Color.Black)) {
+            // The frame is fitted into the free space with its own aspect ratio (works in landscape too).
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(Modifier.aspectRatio(aspect).background(Color.Black)) {
                 Canvas(
                     Modifier
                         .fillMaxSize()
@@ -137,18 +141,17 @@ fun ZoneEditor(onClose: () -> Unit) {
                     for (r in 1 until rows) drawLine(Color.White.copy(alpha = 0.25f), Offset(0f, r * ch), Offset(size.width, r * ch))
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = { cells = BooleanArray(cols * rows) }) { Text("Очистить") }
                 OutlinedButton(onClick = { cells = BooleanArray(cols * rows) { !cells[it] } }) { Text("Инвертировать") }
-            }
-            Button(
-                onClick = {
+                Spacer(Modifier.weight(1f))
+                Button(onClick = {
                     val mask = ZoneMask(cols, rows, cells)
                     App.settings.set(Keys.MOTION_ZONES, mask.format())
                     onClose()
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Сохранить") }
+                }) { Text("Сохранить") }
+            }
         }
     }
 }
