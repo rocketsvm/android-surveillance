@@ -190,8 +190,16 @@ class CameraService : LifecycleService() {
         wifiLock = null
     }
 
+    private var cachedAddress: com.surveil.core.NetAddress? = null
+    private var addressCheckedMs = 0L
+
     private fun updateNotification(st: EngineStatus) {
-        val addr = DeviceInfo.networkAddresses(this).firstOrNull { !it.ipv6 }
+        val now = System.currentTimeMillis()
+        if (now - addressCheckedMs > 10_000) {
+            addressCheckedMs = now
+            cachedAddress = DeviceInfo.networkAddresses(this).firstOrNull { !it.ipv6 }
+        }
+        val addr = cachedAddress
         val parts = ArrayList<String>()
         if (addr != null && st.serverPort > 0) parts += "http://${addr.address}:${st.serverPort}"
         when (st.camera.state) {

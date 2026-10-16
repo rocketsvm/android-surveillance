@@ -24,3 +24,6 @@ keystore.properties
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Built APKs for hand-off (published as GitHub releases)
+/dist/

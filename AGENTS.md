@@ -22,6 +22,10 @@ Working notes, toolchain quirks and test results: NOTES.md.
   - `settings/` — `Schema` (single source of truth for phone UI, web UI and validation),
     `SettingsStore` (JSON file, StateFlow, PBKDF2 password).
   - `web/` — routes (`WebApi`), auth (cookie session or HTTP Basic), event push (`EventBus`).
+  - `rtsp/` — RTSP 1.0 server: SDP, RTP H.264 (single NAL / FU-A, SPS+PPS before IDR),
+    AAC (RFC 3640), TCP interleaved and UDP, RTCP sender reports; Basic auth.
+  - `notify/` — `TelegramNotifier`: motion photo with cooldown, clip video, power/camera alerts,
+    chat discovery via getUpdates; all network work on one background thread.
   - `CoreEngine` — wires it all; `Platform` is the interface the host implements.
   - `resources/web/` — the web UI (vanilla JS, no build step, no CDN: works offline).
 - `:app` — Android.
@@ -38,7 +42,7 @@ Working notes, toolchain quirks and test results: NOTES.md.
 ## Data flow
 
 ```
-Camera2 → SurfaceTexture → GlRenderer ─┬→ MediaCodec H.264 → StreamHub ─┬→ LiveStreamer (WS / live.mp4)
+Camera2 → SurfaceTexture → GlRenderer ─┬→ MediaCodec H.264 → StreamHub ─┬→ LiveStreamer (WS / live.mp4), RtspServer
                                        ├→ preview SurfaceView          ├→ Recorder → MP4 + journal
                                        ├→ luma 160×90 → MotionDetector ┘   (motion events → Recorder)
                                        └→ snapshots (JPEG)
