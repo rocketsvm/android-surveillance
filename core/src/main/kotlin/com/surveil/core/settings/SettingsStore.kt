@@ -68,7 +68,7 @@ class SettingsStore(private val file: File) {
                 errors[key] = "недопустимое значение"
                 continue
             }
-            next[key] = if (def is TextSetting && def.secret) {
+            next[key] = if (def is TextSetting && def.hashed) {
                 val plain = (coerced as JsonPrimitive).content
                 JsonPrimitive(if (plain.isEmpty()) "" else PasswordHash.hash(plain))
             } else coerced

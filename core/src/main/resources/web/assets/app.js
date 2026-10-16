@@ -606,6 +606,16 @@ function renderSettings() {
     const card = h('div', { class: 'card group', 'data-group': g.id }, h('h2', { text: g.title }));
     card.append(h('div', { class: 'group-notice', hidden: true }));
     for (const def of g.settings) card.append(renderField(def));
+    if (g.id === 'notify') {
+      const test = h('button', { class: 'btn', type: 'button', style: 'margin-top:12px' }, 'Отправить тестовое сообщение');
+      test.onclick = async () => {
+        test.disabled = true;
+        try { await api('/api/notify/test', { body: {} }); toast('Отправлено — проверьте Telegram'); }
+        catch (e) { toast(e.message, true); }
+        test.disabled = false;
+      };
+      card.append(test);
+    }
     root.append(card);
   }
   renderNotices();
@@ -614,6 +624,12 @@ function renderSettings() {
 /** Live state next to the related settings (e.g. why the microphone is not recording). */
 function renderNotices() {
   const st = S.status;
+  const notify = $('[data-group="notify"] .group-notice');
+  if (notify && st && st.notify) {
+    notify.hidden = !st.notify.error;
+    notify.className = 'group-notice warn';
+    notify.textContent = st.notify.error ? 'Последняя отправка не удалась: ' + st.notify.error : '';
+  }
   const audio = $('[data-group="audio"] .group-notice');
   if (!audio || !st || !st.camera) return;
   const cam = st.camera;
@@ -668,21 +684,38 @@ function renderField(def) {
     btn.onclick = () => openZonesEditor(def);
     const info = h('span', { class: 'muted', text: value ? 'Есть исключённые зоны' : 'Весь кадр' });
     row.append(h('div', { class: 'field-control' }, info, btn));
+  } else if (def.type === 'text' && def.editor === 'tg-chat') {
+    const input = h('input', { type: 'text', maxlength: def.maxLength, value, placeholder: '123456789' });
+    input.onchange = () => saveSetting(def.key, input.value.trim(), field);
+    const find = h('button', { class: 'btn', type: 'button', text: 'Найти' });
+    find.onclick = async () => {
+      try {
+        const r = await api('/api/notify/chats', { body: {} });
+        const chats = r.chats || [];
+        if (!chats.length) { toast('Чатов нет: напишите своему боту любое сообщение и повторите', true); return; }
+        const pick = chats.length === 1 ? chats[0] : chats.find((c) => confirm('Использовать чат «' + c.title + '» (' + c.id + ')?'));
+        if (pick && await saveSetting(def.key, pick.id, field)) { input.value = pick.id; toast('Чат: ' + pick.title); }
+      } catch (e) { toast(e.message, true); }
+    };
+    row.append(h('div', { class: 'field-control' }, input, find));
   } else if (def.type === 'text') {
     const input = h('input', { type: 'text', maxlength: def.maxLength, value });
     input.onchange = () => saveSetting(def.key, input.value.trim(), field);
     row.append(h('div', { class: 'field-control' }, input));
   } else if (def.type === 'secret') {
     const isSet = def.isSet;
-    const input = h('input', { type: 'password', placeholder: isSet ? 'Новый пароль' : 'Задать пароль', autocomplete: 'new-password', maxlength: def.maxLength });
+    const isPassword = def.key === 'net.password';
+    const input = h('input', { type: 'password', placeholder: isSet ? 'Новое значение' : (isPassword ? 'Задать пароль' : 'Вставьте значение'), autocomplete: 'new-password', maxlength: def.maxLength });
     const save = h('button', { class: 'btn primary', type: 'button', text: 'Сохранить' });
     save.onclick = async () => {
-      const pw = input.value;
-      if (!pw) { toast('Введите пароль', true); return; }
-      if (await saveSetting(def.key, pw, field)) {
-        const user = S.values['net.username'] || 'admin';
-        await api('/api/login', { body: { username: user, password: pw } }).catch(() => {});
-        toast('Пароль установлен');
+      const v = input.value.trim();
+      if (!v) { toast('Поле пустое', true); return; }
+      if (await saveSetting(def.key, v, field)) {
+        if (isPassword) {
+          const user = S.values['net.username'] || 'admin';
+          await api('/api/login', { body: { username: user, password: v } }).catch(() => {});
+          toast('Пароль установлен');
+        }
         loadSettings();
       }
     };
@@ -690,13 +723,16 @@ function renderField(def) {
     if (isSet) {
       const clear = h('button', { class: 'btn ghost', type: 'button', text: 'Убрать' });
       clear.onclick = async () => {
-        if (!confirm('Отключить защиту паролем? Доступ к камере получит любой в этой сети.')) return;
+        if (isPassword && !confirm('Отключить защиту паролем? Доступ к камере получит любой в этой сети.')) return;
         if (await saveSetting(def.key, '', field)) loadSettings();
       };
       ctl.append(clear);
     }
     field.append(h('div', { class: 'range-wrap' }, ctl));
-    label.append(h('div', { class: 'field-help', text: isSet ? 'Пароль установлен' : 'Пароль не установлен — доступ открыт всем в сети' }));
+    const state = isPassword
+      ? (isSet ? 'Пароль установлен' : 'Пароль не установлен — доступ открыт всем в сети')
+      : (isSet ? 'Задан' : 'Не задан');
+    label.append(h('div', { class: 'field-help', text: state }));
   }
   return field;
 }

@@ -101,6 +101,24 @@ class WebApi(private val engine: CoreEngine) {
             engine.setManualRecording(on)
             HttpResponse.ok()
         }
+        post("/api/notify/test") {
+            val latch = CountDownLatch(1)
+            var jpeg: ByteArray? = null
+            engine.platform.snapshot(1280) { jpeg = it; latch.countDown() }
+            latch.await(4, TimeUnit.SECONDS)
+            val err = engine.telegram.sendTest(engine.settings.name, jpeg)
+            if (err == null) HttpResponse.ok() else HttpResponse.error(502, err)
+        }
+        post("/api/notify/chats") {
+            engine.telegram.findChats().fold(
+                onSuccess = { chats ->
+                    json(buildJsonObject {
+                        put("chats", buildJsonArray { chats.forEach { (id, title) -> addJsonObject { put("id", id); put("title", title) } } })
+                    })
+                },
+                onFailure = { HttpResponse.error(502, it.message ?: "ошибка") },
+            )
+        }
         post("/api/camera/restart") {
             engine.platform.restartCamera()
             HttpResponse.ok()

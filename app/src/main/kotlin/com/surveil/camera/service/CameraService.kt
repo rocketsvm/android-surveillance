@@ -4,8 +4,10 @@ import android.Manifest
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.wifi.WifiManager
@@ -94,6 +96,26 @@ class CameraService : LifecycleService() {
         lifecycleScope.launch {
             core.status.collect { updateNotification(it) }
         }
+        registerReceiver(powerReceiver, IntentFilter().apply {
+            addAction(Intent.ACTION_POWER_CONNECTED)
+            addAction(Intent.ACTION_POWER_DISCONNECTED)
+            addAction(Intent.ACTION_BATTERY_LOW)
+            addAction(Intent.ACTION_BATTERY_OKAY)
+        })
+    }
+
+    /** Power events matter for a camera: a disconnected charger may mean a power cut or tampering. */
+    private val powerReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val core = engine?.core ?: return
+            val level = DeviceInfo.deviceStatus(context).batteryPercent?.let { " (батарея $it%)" } ?: ""
+            when (intent.action) {
+                Intent.ACTION_POWER_DISCONNECTED -> core.onSystemEvent("Зарядка отключена$level", alert = true)
+                Intent.ACTION_POWER_CONNECTED -> core.onSystemEvent("Зарядка подключена$level", alert = true)
+                Intent.ACTION_BATTERY_LOW -> core.onSystemEvent("Батарея разряжается$level", alert = true)
+                Intent.ACTION_BATTERY_OKAY -> core.onSystemEvent("Заряд батареи восстановлен$level", alert = false)
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -107,6 +129,7 @@ class CameraService : LifecycleService() {
     }
 
     override fun onDestroy() {
+        runCatching { unregisterReceiver(powerReceiver) }
         EngineHolder.state.value = null
         engine?.let {
             it.pipeline.release()

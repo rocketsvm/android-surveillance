@@ -124,8 +124,10 @@ class ChoiceSetting(
 
 class TextSetting(
     key: String, title: String, val default: String, val maxLength: Int = 64,
-    /** Secrets are stored hashed and never sent back to clients. */
+    /** Secrets are never sent back to clients. */
     val secret: Boolean = false,
+    /** Store only a hash (passwords). Tokens that must be used later are stored as is. */
+    val hashed: Boolean = secret,
     /** A UI hint for special editors (e.g. "zones"). */
     val editor: String? = null,
     help: String? = null, apply: Apply = Apply.LIVE, advanced: Boolean = false,
@@ -193,6 +195,14 @@ object Keys {
 
     const val AUDIO_ENABLED = "audio.enabled"
     const val AUDIO_GAIN = "audio.gain"
+
+    const val TG_ENABLED = "notify.telegram"
+    const val TG_TOKEN = "notify.tgToken"
+    const val TG_CHAT = "notify.tgChat"
+    const val TG_PHOTO = "notify.photo"
+    const val TG_VIDEO = "notify.video"
+    const val TG_COOLDOWN_MIN = "notify.cooldownMin"
+    const val TG_POWER = "notify.power"
 
     const val PORT = "net.port"
     const val RTSP_ENABLED = "net.rtsp"
@@ -286,6 +296,18 @@ object Schema {
                 help = "Добавляет звук в трансляцию и записи. Нужно разрешение на микрофон", apply = Apply.PIPELINE),
             IntSetting(Keys.AUDIO_GAIN, "Усиление", 0, 0, 24, step = 3, unit = "дБ",
                 help = "Для тихих помещений", apply = Apply.PIPELINE),
+        )),
+        SettingGroup("notify", "Уведомления в Telegram", listOf(
+            BoolSetting(Keys.TG_ENABLED, "Присылать уведомления", false,
+                help = "Нужен интернет на телефоне и свой бот: создайте его у @BotFather и вставьте токен"),
+            TextSetting(Keys.TG_TOKEN, "Токен бота", "", maxLength = 100, secret = true, hashed = false),
+            TextSetting(Keys.TG_CHAT, "ID чата", "", maxLength = 32, editor = "tg-chat",
+                help = "Напишите боту любое сообщение и нажмите «Найти»"),
+            BoolSetting(Keys.TG_PHOTO, "Снимок при движении", true),
+            BoolSetting(Keys.TG_VIDEO, "Видео записи после окончания", false, help = "Ролики до 45 МБ"),
+            BoolSetting(Keys.TG_POWER, "Отключение зарядки и ошибки камеры", true),
+            IntSetting(Keys.TG_COOLDOWN_MIN, "Не чаще одного раза в", 5, 0, 120, unit = "мин",
+                help = "О движении; 0 — без ограничения"),
         )),
         SettingGroup("network", "Доступ", listOf(
             IntSetting(Keys.PORT, "Порт веб-сервера", 8080, 1024, 65535, apply = Apply.SERVER),

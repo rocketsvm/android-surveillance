@@ -90,6 +90,7 @@ class CoreEngine(
     )
     private val web = WebApi(this)
     val rtsp = com.surveil.core.rtsp.RtspServer(hub, { h -> auth.checkBasic(h, "rtsp") }, platform::log)
+    val telegram = com.surveil.core.notify.TelegramNotifier({ settingsStore.current }, platform::log)
     @Volatile private var rtspError: String? = null
     private val detector = MotionDetector()
     private val motionExec = Executors.newSingleThreadExecutor { r -> Thread(r, "motion").apply { isDaemon = true } }
@@ -176,6 +177,14 @@ class CoreEngine(
         cameraStatus = s
         if (s.state == "error" && (prev.state != "error" || prev.error != s.error)) {
             events.add("camera", "Ошибка камеры: ${s.error ?: "неизвестно"}")
+            if (prev.state != "error") {
+                // Brief takeovers (someone opened the camera app) resolve themselves; alert only if it persists.
+                scope.launch {
+                    kotlinx.coroutines.delay(60_000)
+                    val now = cameraStatus
+                    if (now.state == "error") telegram.onSystem("${settings.name}: камера не работает больше минуты — ${now.error ?: "ошибка"}")
+                }
+            }
         }
         if (s.state == "running" && prev.state != "running") {
             events.add("camera", "Камера работает: ${s.width}×${s.height}, ${s.fps} к/с")
@@ -199,6 +208,12 @@ class CoreEngine(
         } catch (e: Exception) {
             motionBusy.set(false)
         }
+    }
+
+    /** Device-level event (power, battery) from the platform: logged and, if enabled, sent to Telegram. */
+    fun onSystemEvent(message: String, alert: Boolean) {
+        events.add("system", message)
+        if (alert) telegram.onSystem("${settings.name}: $message")
     }
 
     fun setManualRecording(on: Boolean) {
@@ -249,6 +264,8 @@ class CoreEngine(
             motionStartMs = System.currentTimeMillis()
             motionPeak = score
             events.add("motion", "Обнаружено движение")
+            val time = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss", java.util.Locale.US).format(java.util.Date(motionStartMs))
+            telegram.onMotion(settings.name, time) { cb -> platform.snapshot(1280, cb) }
         } else {
             val sec = (System.currentTimeMillis() - motionStartMs) / 1000
             events.add("motion", "Движение закончилось: ${sec} с, пик %.1f%%".format(motionPeak), recorder.currentClipId)
@@ -407,6 +424,10 @@ class CoreEngine(
                 rtspError?.let { put("error", it) }
             }
             put("authRequired", s.authEnabled)
+            putJsonObject("notify") {
+                put("enabled", s.bool(Keys.TG_ENABLED))
+                telegram.lastError?.let { put("error", it) }
+            }
         }
     }
 
@@ -443,6 +464,10 @@ class CoreEngine(
 
         override fun onRecordingFinished(meta: RecordingMeta) {
             events.add("recording", "Запись сохранена: ${meta.durationMs / 1000} с, ${meta.sizeBytes / 1024 / 1024} МБ", meta.id)
+            if (meta.trigger == "motion") repo.find(meta.id)?.let { clip ->
+                val time = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss", java.util.Locale.US).format(java.util.Date(meta.startMs))
+                telegram.onClip(clip.video, "${settings.name}: запись $time, ${meta.durationMs / 1000} с")
+            }
             bus.broadcast(buildJsonObject { put("type", "recordings") }.toString())
             publishStatus()
         }

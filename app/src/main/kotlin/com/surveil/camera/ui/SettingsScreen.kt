@@ -58,6 +58,7 @@ import com.surveil.core.settings.Schema
 import com.surveil.core.settings.Setting
 import com.surveil.core.settings.Settings
 import com.surveil.core.settings.TextSetting
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.math.roundToInt
 
@@ -100,6 +101,7 @@ fun SettingsScreen(
                             SettingRow(def, settings, options, onZones)
                             if (i < visible.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         }
+                        if (g.id == "notify") TelegramTestButton()
                     }
                 }
             }
@@ -185,7 +187,9 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
         }
 
         is TextSetting -> {
-            if (def.editor == "zones") {
+            if (def.editor == "tg-chat") {
+                TelegramChatRow(def, settings.string(def.key), title)
+            } else if (def.editor == "zones") {
                 Row(Modifier.fillMaxWidth().clickable(onClick = onZones).padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) { title() }
                     Icon(Icons.Filled.GridOn, null, tint = MaterialTheme.colorScheme.primary)
@@ -198,7 +202,7 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
                     Column(Modifier.weight(1f)) { title() }
                     Text(if (isSet) "Установлен" else "Не задан", color = if (isSet) Palette.Ok else MaterialTheme.colorScheme.error)
                 }
-                if (dialog) PasswordDialog(isSet, onDismiss = { dialog = false }) { pw ->
+                if (dialog) SecretDialog(def, isSet, onDismiss = { dialog = false }) { pw ->
                     dialog = false
                     save(def.key, pw)
                 }
@@ -258,31 +262,96 @@ private fun TextDialog(title: String, initial: String, keyboard: KeyboardType, s
 }
 
 @Composable
-private fun PasswordDialog(isSet: Boolean, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+private fun SecretDialog(def: TextSetting, isSet: Boolean, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    val isPassword = def.key == com.surveil.core.settings.Keys.PASSWORD
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = { if (text.isNotEmpty()) onSave(text) }, enabled = text.isNotEmpty()) { Text("Сохранить") } },
+        confirmButton = { TextButton(onClick = { if (text.isNotBlank()) onSave(text.trim()) }, enabled = text.isNotBlank()) { Text("Сохранить") } },
         dismissButton = {
             Row {
-                if (isSet) TextButton(onClick = { onSave("") }) { Text("Убрать пароль") }
+                if (isSet) TextButton(onClick = { onSave("") }) { Text("Убрать") }
                 TextButton(onClick = onDismiss) { Text("Отмена") }
             }
         },
-        title = { Text("Пароль для веб-доступа") },
+        title = { Text(if (isPassword) "Пароль для веб-доступа" else def.title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Браузер будет спрашивать имя пользователя и этот пароль. Без пароля камеру может открыть любой в вашей сети.",
+                    if (isPassword) "Браузер будет спрашивать имя пользователя и этот пароль. Без пароля камеру может открыть любой в вашей сети."
+                    else "Создайте бота у @BotFather в Telegram и вставьте выданный токен.",
                     style = MaterialTheme.typography.bodySmall,
                 )
                 OutlinedTextField(
                     value = text, onValueChange = { text = it }, singleLine = true,
-                    label = { Text(if (isSet) "Новый пароль" else "Пароль") },
+                    label = { Text(if (isSet) "Новое значение" else def.title) },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 )
             }
         },
     )
+}
+
+/** Notifier bound to the current settings; works whether or not the camera service is running. */
+private fun telegram() = com.surveil.camera.service.EngineHolder.current.value?.core?.telegram
+    ?: com.surveil.core.notify.TelegramNotifier({ App.settings.current }, { android.util.Log.i("Telegram", it) })
+
+@Composable
+private fun TelegramChatRow(def: TextSetting, current: String, title: @Composable () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var chats by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
+    Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            title()
+            Text(current.ifEmpty { "не задан" }, color = MaterialTheme.colorScheme.primary)
+        }
+        TextButton(onClick = {
+            scope.launch {
+                val r = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { telegram().findChats() }
+                r.fold(
+                    onSuccess = { list ->
+                        when (list.size) {
+                            0 -> android.widget.Toast.makeText(context, "Чатов нет: напишите боту любое сообщение и повторите", android.widget.Toast.LENGTH_LONG).show()
+                            1 -> save(def.key, list[0].first)
+                            else -> chats = list
+                        }
+                    },
+                    onFailure = { android.widget.Toast.makeText(context, it.message ?: "ошибка", android.widget.Toast.LENGTH_LONG).show() },
+                )
+            }
+        }) { Text("Найти") }
+    }
+    chats?.let { list ->
+        ChoiceDialog(def.title, list.map { Option(it.first, "${it.second} (${it.first})") }, current, onDismiss = { chats = null }) { v ->
+            chats = null
+            save(def.key, v)
+        }
+    }
+}
+
+@Composable
+private fun TelegramTestButton() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var busy by remember { mutableStateOf(false) }
+    androidx.compose.material3.OutlinedButton(
+        enabled = !busy,
+        modifier = Modifier.padding(top = 8.dp),
+        onClick = {
+            busy = true
+            scope.launch {
+                val err = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val pipeline = com.surveil.camera.service.EngineHolder.current.value?.pipeline
+                    val jpeg = if (pipeline == null) null else kotlinx.coroutines.withTimeoutOrNull(4000) {
+                        kotlinx.coroutines.suspendCancellableCoroutine<ByteArray?> { c -> pipeline.snapshotJpeg(1280) { c.resumeWith(Result.success(it)) } }
+                    }
+                    telegram().sendTest(App.settings.current.name, jpeg)
+                }
+                busy = false
+                android.widget.Toast.makeText(context, err ?: "Отправлено — проверьте Telegram", android.widget.Toast.LENGTH_LONG).show()
+            }
+        },
+    ) { Text("Отправить тестовое сообщение") }
 }

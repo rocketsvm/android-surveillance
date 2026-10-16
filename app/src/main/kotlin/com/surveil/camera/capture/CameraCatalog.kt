@@ -58,7 +58,11 @@ class CameraCatalog(context: Context) {
             ?: cameras.firstOrNull { it.facing == CameraMetadata.LENS_FACING_BACK }
             ?: cameras.firstOrNull()
 
-    fun cameraOptions(): List<Option> = cameras.map { Option(it.id, it.label) }
+    /** Camera choices; the empty value means "the main back camera" and is listed first. */
+    fun cameraOptions(): List<Option> {
+        val auto = resolve(null)?.label?.substringBefore(" · ")?.lowercase()
+        return listOf(Option("", if (auto != null) "Авто ($auto)" else "Авто")) + cameras.map { Option(it.id, it.label) }
+    }
 
     private val resolutionCache = HashMap<String, List<Option>>()
 
