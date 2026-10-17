@@ -49,6 +49,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.surveil.camera.App
+import com.surveil.core.settings.Keys
 import com.surveil.core.settings.BoolSetting
 import com.surveil.core.settings.ChoiceSetting
 import com.surveil.core.settings.FloatSetting
@@ -72,10 +73,11 @@ fun SettingsScreen(
     onZones: () -> Unit,
 ) {
     var advanced by rememberSaveable { mutableStateOf(false) }
+    val lang = settings.string(Keys.LANGUAGE)
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Настройки") },
+                title = { Text(LocaleHelper.settingTitle(Keys.NAME, lang)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад") } },
                 actions = {
                     Text("Все", style = MaterialTheme.typography.labelLarge)
@@ -95,7 +97,7 @@ fun SettingsScreen(
             items(Schema.groups, key = { it.id }) { g ->
                 SectionCard {
                     Column {
-                        Text(g.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(LocaleHelper.groupTitle(g.id, lang), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         val visible = g.settings.filter { advanced || !it.advanced }
                         visible.forEachIndexed { i, def ->
                             SettingRow(def, settings, options, onZones)
@@ -125,9 +127,10 @@ private fun formatNumber(v: Double, isFloat: Boolean, unit: String?): String {
 @Composable
 private fun SettingRow(def: Setting, settings: Settings, options: (String) -> List<Option>?, onZones: () -> Unit) {
     var dialog by remember { mutableStateOf(false) }
+    val lang = settings.string(Keys.LANGUAGE)
     val title: @Composable () -> Unit = {
-        Text(def.title, style = MaterialTheme.typography.bodyLarge)
-        def.help?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        Text(LocaleHelper.settingTitle(def.key, lang), style = MaterialTheme.typography.bodyLarge)
+        LocaleHelper.settingHelp(def.key, lang)?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
     when (def) {
         is BoolSetting -> Row(
@@ -147,7 +150,7 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
                 Spacer(Modifier.width(12.dp))
                 Text(label, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
             }
-            if (dialog) ChoiceDialog(def.title, opts, current, onDismiss = { dialog = false }) { v ->
+            if (dialog) ChoiceDialog(LocaleHelper.settingTitle(def.key, lang), opts, current, onDismiss = { dialog = false }) { v ->
                 dialog = false
                 save(def.key, v)
             }
@@ -165,7 +168,7 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
                     Column(Modifier.weight(1f)) { title() }
                     Text(formatNumber(value, isFloat, null), color = MaterialTheme.colorScheme.primary)
                 }
-                if (dialog) TextDialog(def.title, formatNumber(value, isFloat, null), KeyboardType.Number, secret = false, onDismiss = { dialog = false }) { t ->
+                if (dialog) TextDialog(LocaleHelper.settingTitle(def.key, lang), formatNumber(value, isFloat, null), KeyboardType.Number, secret = false, onDismiss = { dialog = false }) { t ->
                     dialog = false
                     t.replace(',', '.').toDoubleOrNull()?.let { save(def.key, if (isFloat) it else it.roundToInt()) }
                 }
@@ -202,7 +205,7 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
                     Column(Modifier.weight(1f)) { title() }
                     Text(if (isSet) "Установлен" else "Не задан", color = if (isSet) Palette.Ok else MaterialTheme.colorScheme.error)
                 }
-                if (dialog) SecretDialog(def, isSet, onDismiss = { dialog = false }) { pw ->
+                if (dialog) SecretDialog(def, isSet, lang, onDismiss = { dialog = false }) { pw ->
                     dialog = false
                     save(def.key, pw)
                 }
@@ -212,7 +215,7 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
                     Column(Modifier.weight(1f)) { title() }
                     Text(current.ifEmpty { "—" }, color = MaterialTheme.colorScheme.primary)
                 }
-                if (dialog) TextDialog(def.title, current, KeyboardType.Text, secret = false, onDismiss = { dialog = false }) { t ->
+                if (dialog) TextDialog(LocaleHelper.settingTitle(def.key, lang), current, KeyboardType.Text, secret = false, onDismiss = { dialog = false }) { t ->
                     dialog = false
                     save(def.key, t.trim())
                 }
@@ -262,7 +265,7 @@ private fun TextDialog(title: String, initial: String, keyboard: KeyboardType, s
 }
 
 @Composable
-private fun SecretDialog(def: TextSetting, isSet: Boolean, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+private fun SecretDialog(def: TextSetting, isSet: Boolean, lang: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     val isPassword = def.key == com.surveil.core.settings.Keys.PASSWORD
     var text by remember { mutableStateOf("") }
     AlertDialog(
@@ -274,7 +277,7 @@ private fun SecretDialog(def: TextSetting, isSet: Boolean, onDismiss: () -> Unit
                 TextButton(onClick = onDismiss) { Text("Отмена") }
             }
         },
-        title = { Text(if (isPassword) "Пароль для веб-доступа" else def.title) },
+        title = { Text(if (isPassword) "Web access password" else LocaleHelper.settingTitle(def.key, lang)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
