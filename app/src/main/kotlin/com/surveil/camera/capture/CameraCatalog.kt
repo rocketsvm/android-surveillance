@@ -15,6 +15,8 @@ import kotlin.math.abs
 import kotlin.math.atan
 import kotlin.math.roundToInt
 
+import com.surveil.camera.R
+
 /** Static description of one camera as seen by apps. */
 class CameraInfo(
     val id: String,
@@ -45,7 +47,7 @@ class CameraInfo(
 }
 
 /** Enumerates cameras and derives user-facing options (camera list, supported resolutions). */
-class CameraCatalog(context: Context) {
+class CameraCatalog(private val context: Context) {
     private val manager = context.getSystemService(CameraManager::class.java)
 
     val cameras: List<CameraInfo> by lazy { load() }
@@ -61,7 +63,8 @@ class CameraCatalog(context: Context) {
     /** Camera choices; the empty value means "the main back camera" and is listed first. */
     fun cameraOptions(): List<Option> {
         val auto = resolve(null)?.label?.substringBefore(" · ")?.lowercase()
-        return listOf(Option("", if (auto != null) "Авто ($auto)" else "Авто")) + cameras.map { Option(it.id, it.label) }
+        val autoLabel = if (auto != null) context.getString(R.string.camera_auto_label, auto) else context.getString(R.string.camera_auto)
+        return listOf(Option("", autoLabel)) + cameras.map { Option(it.id, it.label) }
     }
 
     private val resolutionCache = HashMap<String, List<Option>>()
@@ -86,14 +89,14 @@ class CameraCatalog(context: Context) {
         val fronts = list.filter { it.isFront }
         for (c in list) {
             val base = when (c.facing) {
-                CameraMetadata.LENS_FACING_FRONT -> if (fronts.size > 1) "Фронтальная ${fronts.indexOf(c) + 1}" else "Фронтальная"
+                CameraMetadata.LENS_FACING_FRONT -> if (fronts.size > 1) context.getString(R.string.camera_front_n, fronts.indexOf(c) + 1) else context.getString(R.string.camera_front)
                 CameraMetadata.LENS_FACING_BACK -> when {
-                    c === mainBack -> "Задняя основная"
-                    mainBack != null && c.hfovDeg > mainBack.hfovDeg * 1.2f -> "Задняя широкоугольная"
-                    mainBack != null && c.hfovDeg < mainBack.hfovDeg * 0.75f -> "Задняя телеобъектив"
-                    else -> "Задняя ${backs.indexOf(c) + 1}"
+                    c === mainBack -> context.getString(R.string.camera_back_main)
+                    mainBack != null && c.hfovDeg > mainBack.hfovDeg * 1.2f -> context.getString(R.string.camera_back_wide)
+                    mainBack != null && c.hfovDeg < mainBack.hfovDeg * 0.75f -> context.getString(R.string.camera_back_tele)
+                    else -> context.getString(R.string.camera_back_n, backs.indexOf(c) + 1)
                 }
-                else -> "Внешняя камера"
+                else -> context.getString(R.string.camera_external)
             }
             c.label = if (c.hfovDeg > 0) "$base · ${c.hfovDeg.roundToInt()}°" else base
         }

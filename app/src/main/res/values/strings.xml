@@ -233,4 +233,15 @@
     <string name="main_start_camera">Start camera</string>
     <string name="main_dim_hint">Camera is working. Tap the screen to exit.</string>
     <string name="main_vlc_header">For VLC and DVRs:</string>
+
+    <!-- Camera labels -->
+    <string name="camera_front">Front</string>
+    <string name="camera_front_n">Front %d</string>
+    <string name="camera_back_main">Main back</string>
+    <string name="camera_back_wide">Wide-angle back</string>
+    <string name="camera_back_tele">Telephoto back</string>
+    <string name="camera_back_n">Back %d</string>
+    <string name="camera_external">External camera</string>
+    <string name="camera_auto">Auto</string>
+    <string name="camera_auto_label">Auto (%s)</string>
 </resources>

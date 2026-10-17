@@ -233,4 +233,15 @@
     <string name="main_start_camera">Запустить камеру</string>
     <string name="main_dim_hint">Камера работает. Коснитесь экрана, чтобы выйти.</string>
     <string name="main_vlc_header">Для VLC и видеорегистраторов:</string>
+
+    <!-- Camera labels -->
+    <string name="camera_front">Фронтальная</string>
+    <string name="camera_front_n">Фронтальная %d</string>
+    <string name="camera_back_main">Задняя основная</string>
+    <string name="camera_back_wide">Задняя широкоугольная</string>
+    <string name="camera_back_tele">Задняя телеобъектив</string>
+    <string name="camera_back_n">Задняя %d</string>
+    <string name="camera_external">Внешняя камера</string>
+    <string name="camera_auto">Авто</string>
+    <string name="camera_auto_label">Авто (%s)</string>
 </resources>
