@@ -144,13 +144,14 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
         is ChoiceSetting -> {
             val opts = (if (def.dynamic) options(def.key) else null) ?: def.options
             val current = settings.string(def.key)
-            val label = opts.firstOrNull { it.value == current }?.label ?: if (current.isEmpty()) "Авто" else current
+            val opt = opts.firstOrNull { it.value == current }
+            val label = if (opt != null) LocaleHelper.optionLabel(opt.value, opt.label, lang) else if (current.isEmpty()) "Авто" else current
             Row(Modifier.fillMaxWidth().clickable { dialog = true }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { title() }
                 Spacer(Modifier.width(12.dp))
                 Text(label, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
             }
-            if (dialog) ChoiceDialog(LocaleHelper.settingTitle(def.key, lang), opts, current, onDismiss = { dialog = false }) { v ->
+            if (dialog) ChoiceDialog(LocaleHelper.settingTitle(def.key, lang), opts, current, lang, onDismiss = { dialog = false }) { v ->
                 dialog = false
                 save(def.key, v)
             }
@@ -191,7 +192,7 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
 
         is TextSetting -> {
             if (def.editor == "tg-chat") {
-                TelegramChatRow(def, settings.string(def.key), title)
+                TelegramChatRow(def, settings.string(def.key), lang, title)
             } else if (def.editor == "zones") {
                 Row(Modifier.fillMaxWidth().clickable(onClick = onZones).padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) { title() }
@@ -225,7 +226,7 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
 }
 
 @Composable
-private fun ChoiceDialog(title: String, options: List<Option>, current: String, onDismiss: () -> Unit, onPick: (String) -> Unit) {
+private fun ChoiceDialog(title: String, options: List<Option>, current: String, lang: String, onDismiss: () -> Unit, onPick: (String) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
@@ -238,7 +239,7 @@ private fun ChoiceDialog(title: String, options: List<Option>, current: String, 
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = o.value == current, onClick = { onPick(o.value) })
-                        Text(o.label)
+                        Text(LocaleHelper.optionLabel(o.value, o.label, lang))
                     }
                 }
             }
@@ -301,7 +302,7 @@ private fun telegram() = com.surveil.camera.service.EngineHolder.current.value?.
     ?: com.surveil.core.notify.TelegramNotifier({ App.settings.current }, { android.util.Log.i("Telegram", it) })
 
 @Composable
-private fun TelegramChatRow(def: TextSetting, current: String, title: @Composable () -> Unit) {
+private fun TelegramChatRow(def: TextSetting, current: String, lang: String, title: @Composable () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var chats by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
@@ -327,7 +328,7 @@ private fun TelegramChatRow(def: TextSetting, current: String, title: @Composabl
         }) { Text("Найти") }
     }
     chats?.let { list ->
-        ChoiceDialog(def.title, list.map { Option(it.first, "${it.second} (${it.first})") }, current, onDismiss = { chats = null }) { v ->
+        ChoiceDialog(LocaleHelper.settingTitle(def.key, lang), list.map { Option(it.first, "${it.second} (${it.first})") }, current, lang, onDismiss = { chats = null }) { v ->
             chats = null
             save(def.key, v)
         }
