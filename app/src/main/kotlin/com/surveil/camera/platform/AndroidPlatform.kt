@@ -70,13 +70,16 @@ class AndroidPlatform(private val context: Context, private val catalog: CameraC
             "ru" -> Locale("ru")
             else -> null  // system default
         }
-        val resources = context.resources
-        val config = resources.configuration
+        val config = Configuration(context.resources.configuration)
         if (locale != null) {
             config.setLocale(locale)
         } else {
             config.setLocale(LocaleList.getDefault()[0])
         }
-        resources.updateConfiguration(config, resources.displayMetrics)
+        context.createConfigurationContext(config)
+        // Recreate activity to apply new locale
+        if (context is android.app.Activity) {
+            (context as android.app.Activity).recreate()
+        }
     }
 }
