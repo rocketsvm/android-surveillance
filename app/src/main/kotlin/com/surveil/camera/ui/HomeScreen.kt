@@ -1,6 +1,9 @@
 package com.surveil.camera.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -71,6 +74,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.surveil.camera.App
 import com.surveil.camera.R
+import com.surveil.camera.service.EngineHolder
 import com.surveil.core.EngineStatus
 import com.surveil.core.NetAddress
 import com.surveil.core.settings.Keys
@@ -164,6 +168,33 @@ private fun LazyListScope.homeItems(state: HomeState, actions: HomeActions) {
 @Composable
 private fun PreviewCard(state: HomeState, actions: HomeActions, modifier: Modifier) {
     var previewOn by rememberSaveable { mutableStateOf(true) }
+    var previewWasOn by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    // Turn off preview when screen turns off, restore when screen turns on
+    val receiver = remember {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                when (intent.action) {
+                    Intent.ACTION_SCREEN_OFF -> {
+                        previewWasOn = previewOn
+                        previewOn = false
+                    }
+                    Intent.ACTION_SCREEN_ON -> {
+                        previewOn = previewWasOn
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
+        context.registerReceiver(receiver, filter)
+    }
     val cam = state.status.camera
     val aspect = if (cam.width > 0 && cam.height > 0) cam.width.toFloat() / cam.height else 16f / 9f
     Box(
