@@ -312,20 +312,33 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
             val step = if (def is IntSetting) def.step.toDouble() else (def as FloatSetting).step
             val unit = unitString(if (def is IntSetting) def.unit else (def as FloatSetting).unit)
             val value = settings.double(def.key)
-            Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) { titleComposable() }
-                Spacer(Modifier.width(12.dp))
-                Text(formatNumber(value, isFloat, unit), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+            // Use text input for wide ranges (ports)
+            if (def.key == Keys.PORT || def.key == Keys.RTSP_PORT) {
+                Row(Modifier.fillMaxWidth().clickable { dialog = true }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) { titleComposable() }
+                    Spacer(Modifier.width(12.dp))
+                    Text(value.roundToInt().toString(), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                }
+                if (dialog) TextDialog(title, value.roundToInt().toString(), KeyboardType.Number, secret = false, onDismiss = { dialog = false }) { t ->
+                    dialog = false
+                    t.toIntOrNull()?.let { save(def.key, it) }
+                }
+            } else {
+                Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) { titleComposable() }
+                    Spacer(Modifier.width(12.dp))
+                    Text(formatNumber(value, isFloat, unit), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                }
+                Slider(
+                    value = value.toFloat(),
+                    onValueChange = { v ->
+                        if (isFloat) save(def.key, v.toDouble())
+                        else save(def.key, v.roundToInt())
+                    },
+                    valueRange = min.toFloat()..max.toFloat(),
+                    steps = if (step > 0) ((max - min) / step).toInt() - 1 else 0,
+                )
             }
-            Slider(
-                value = value.toFloat(),
-                onValueChange = { v ->
-                    if (isFloat) save(def.key, v.toDouble())
-                    else save(def.key, v.roundToInt())
-                },
-                valueRange = min.toFloat()..max.toFloat(),
-                steps = if (step > 0) ((max - min) / step).toInt() - 1 else 0,
-            )
         }
 
         is TextSetting -> {
