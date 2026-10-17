@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.surveil.camera.App
 import com.surveil.camera.capture.CameraCatalog
+import com.surveil.camera.platform.AndroidPlatform
 import com.surveil.camera.platform.DeviceInfo
 import com.surveil.camera.service.BootNotifier
 import com.surveil.camera.service.CameraService
@@ -48,6 +49,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleAutostart(intent)
+        // Apply language setting on startup
+        val lang = App.settings.current.string(Keys.LANGUAGE)
+        if (lang == "auto" || lang.isEmpty()) {
+            val platform = AndroidPlatform(this, CameraCatalog(this))
+            platform.setLocale("auto")
+        }
         setContent { SurveilTheme { Root() } }
     }
 
