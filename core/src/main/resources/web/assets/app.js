@@ -58,6 +58,15 @@ const STRINGS = {
     camera_restarting: 'Камера перезапускается…',
     copy_address: 'Скопируйте адрес',
     no_frame_from_camera: 'Нет кадра с камеры — зоны можно задать вслепую',
+    motion_off: 'Выключен',
+    motion_active: 'Движение!',
+    motion_idle: 'Спокойно',
+    recordings_storage: 'Записи',
+    selected: 'Выбрано',
+    last_send_failed: 'Последняя отправка не удалась',
+    audio_not_recording: 'Звук не записывается',
+    microphone_unavailable: 'микрофон недоступен',
+    microphone_working: 'Микрофон работает',
   },
   en: {
     app_title: 'Surveillance',
@@ -115,6 +124,15 @@ const STRINGS = {
     camera_restarting: 'Camera restarting…',
     copy_address: 'Copy address',
     no_frame_from_camera: 'No frame from camera — zones can be set blindly',
+    motion_off: 'Off',
+    motion_active: 'Motion!',
+    motion_idle: 'Idle',
+    recordings_storage: 'Recordings',
+    selected: 'Selected',
+    last_send_failed: 'Last send failed',
+    audio_not_recording: 'Audio not recording',
+    microphone_unavailable: 'microphone unavailable',
+    microphone_working: 'Microphone working',
   },
 };
 
@@ -406,9 +424,9 @@ function updateMotion(m) {
   $('#motion-meter').style.width = Math.min(100, (m.score || 0) / scale * 100) + '%';
   $('#motion-threshold').style.left = Math.min(100, minArea / scale * 100) + '%';
   const stateEl = $('#motion-state');
-  if (m.enabled === false) { stateEl.textContent = 'Выключен'; stateEl.className = ''; }
-  else if (m.active) { stateEl.textContent = 'Движение!'; stateEl.className = 'active'; }
-  else { stateEl.textContent = 'Спокойно'; stateEl.className = ''; }
+  if (m.enabled === false) { stateEl.textContent = t('motion_off'); stateEl.className = ''; }
+  else if (m.active) { stateEl.textContent = t('motion_active'); stateEl.className = 'active'; }
+  else { stateEl.textContent = t('motion_idle'); stateEl.className = ''; }
   $('#motion-score').textContent = (m.score || 0).toFixed(1).replace('.', ',') + '%';
   $('#pill-motion').hidden = !m.active;
   drawMotionBox(m.active ? m.box : null);
@@ -560,7 +578,7 @@ function renderRecordings() {
   const st = S.storage;
   if (st) {
     const total = st.totalBytes || 1;
-    $('#storage-text').textContent = `Записи: ${fmtBytes(st.usedBytes)} · свободно ${fmtBytes(st.freeBytes)} из ${fmtBytes(st.totalBytes)} (${st.label})`;
+    $('#storage-text').textContent = `${t('recordings_storage')}: ${fmtBytes(st.usedBytes)} · ${t('free')} ${fmtBytes(st.freeBytes)} / ${fmtBytes(st.totalBytes)} (${st.label})`;
     $('#storage-fill').style.width = Math.min(100, (total - st.freeBytes) / total * 100) + '%';
   }
   const list = filteredRecordings();
@@ -624,7 +642,7 @@ function recCard(r) {
 
 function updateSelectBar() {
   $('#select-bar').hidden = !S.selecting;
-  $('#select-count').textContent = `Выбрано: ${S.selected.size}`;
+  $('#select-count').textContent = `${t('selected')}: ${S.selected.size}`;
   $('#btn-delete-selected').disabled = S.selected.size === 0;
 }
 
@@ -811,7 +829,7 @@ function renderNotices() {
   if (notify && st && st.notify) {
     notify.hidden = !st.notify.error;
     notify.className = 'group-notice warn';
-    notify.textContent = st.notify.error ? 'Последняя отправка не удалась: ' + st.notify.error : '';
+    notify.textContent = st.notify.error ? `${t('last_send_failed')}: ${st.notify.error}` : '';
   }
   const audio = $('[data-group="audio"] .group-notice');
   if (!audio || !st || !st.camera) return;
@@ -819,11 +837,11 @@ function renderNotices() {
   if (cam.audio === 'error') {
     audio.hidden = false;
     audio.className = 'group-notice warn';
-    audio.textContent = 'Звук не записывается: ' + (cam.audioError || 'микрофон недоступен');
+    audio.textContent = `${t('audio_not_recording')}: ${cam.audioError || t('microphone_unavailable')}`;
   } else if (cam.audio === 'on') {
     audio.hidden = false;
     audio.className = 'group-notice ok';
-    audio.textContent = 'Микрофон работает';
+    audio.textContent = t('microphone_working');
   } else {
     audio.hidden = true;
   }
