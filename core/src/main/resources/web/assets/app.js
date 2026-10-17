@@ -294,10 +294,20 @@ function stageMessage(text, isError) {
   $('#stage-msg').textContent = text;
 }
 
+function unsupportedMessage() {
+  // iPhone Safari has (Managed)MediaSource only since iOS 17.1; other browsers there use the same engine.
+  if (!/iPhone|iPod/.test(navigator.userAgent)) {
+    return 'Этот браузер не поддерживает воспроизведение H.264 через Media Source Extensions. Откройте страницу в Chrome, Edge, Firefox или Safari.';
+  }
+  const rtsp = S.status && S.status.rtsp;
+  const alt = rtsp && rtsp.enabled && rtsp.port ? `rtsp://${location.hostname}:${rtsp.port}/live` : `http://${location.host}/live.mp4`;
+  return `На iPhone живое видео в браузере работает с iOS 17.1. Обновите систему или откройте поток в приложении VLC: ${alt}`;
+}
+
 function startPlayer() {
   clearTimeout(playerStopTimer);
   if (!LivePlayer.supported()) {
-    stageMessage('Этот браузер не поддерживает воспроизведение H.264 через Media Source Extensions. Откройте страницу в Chrome, Edge, Firefox или Safari.', true);
+    stageMessage(unsupportedMessage(), true);
     return;
   }
   if (!player) {

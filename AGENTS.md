@@ -65,5 +65,6 @@ AudioRecord → AAC ────────────────────
 
 - `tools/gw.sh :core:test` — JVM unit tests (container checks use ffprobe when on PATH).
 - `node tools/browser-check.mjs <url> [--mobile] [--shot x.png]` — headless Chrome smoke test.
+- `node tools/firefox-check.mjs <url> [--shot x.png]` — the same in headless Firefox (WebDriver BiDi).
 - `tools/soak-test.sh <phone-ip> [minutes]` — long run against a phone (viewer + status sampling).
 - On this PC a system HTTP proxy is set: use `curl --noproxy '*'` for LAN addresses.
