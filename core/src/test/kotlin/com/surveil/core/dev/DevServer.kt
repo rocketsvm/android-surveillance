@@ -72,6 +72,7 @@ class FakePlatform(private val dataDir: File) : Platform {
     override fun requestKeyframe() {}
     override fun restartCamera() { println("restartCamera requested") }
     override fun log(message: String) = println("[core] $message")
+    override fun setLocale(tag: String) { println("[core] locale: $tag") }
 }
 
 /** Feeds access units from an Annex B file in real time, looping forever. */

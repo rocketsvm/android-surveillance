@@ -57,4 +57,5 @@ interface Platform {
     fun requestKeyframe()
     fun restartCamera()
     fun log(message: String)
+    fun setLocale(tag: String)
 }

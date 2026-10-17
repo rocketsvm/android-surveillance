@@ -37,6 +37,7 @@ class Settings internal constructor(val values: Map<String, JsonElement>) {
     val port: Int get() = int(Keys.PORT)
     val passwordHash: String get() = string(Keys.PASSWORD)
     val authEnabled: Boolean get() = passwordHash.isNotEmpty()
+    val language: String get() = string(Keys.LANGUAGE)
 }
 
 /**

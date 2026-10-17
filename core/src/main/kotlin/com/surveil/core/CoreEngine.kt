@@ -323,6 +323,10 @@ class CoreEngine(
             // The detector is confined to its own thread.
             runCatching { motionExec.execute { detector.reset() } }
         }
+        if (Keys.LANGUAGE in changed) {
+            val tag = s.language
+            platform.setLocale(tag)
+        }
     }
 
     private fun startServer(port: Int) {

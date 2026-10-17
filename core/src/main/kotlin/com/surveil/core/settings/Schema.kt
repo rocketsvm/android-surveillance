@@ -152,6 +152,7 @@ class SettingGroup(val id: String, val title: String, val settings: List<Setting
 object Keys {
     const val NAME = "sys.name"
     const val AUTOSTART = "sys.autostart"
+    const val LANGUAGE = "sys.language"
 
     const val CAMERA_ID = "camera.id"
     const val RESOLUTION = "video.resolution"
@@ -319,6 +320,11 @@ object Schema {
         )),
         SettingGroup("system", "Система", listOf(
             TextSetting(Keys.NAME, "Название камеры", "Камера", maxLength = 40),
+            ChoiceSetting(Keys.LANGUAGE, "Язык интерфейса", "auto", listOf(
+                Option("auto", "Как в системе"),
+                Option("en", "English"),
+                Option("ru", "Русский"),
+            ), help = "Язык приложения и веб-интерфейса"),
             BoolSetting(Keys.AUTOSTART, "Автозапуск после перезагрузки", false,
                 help = "Требует разрешения «Поверх других приложений»"),
         )),

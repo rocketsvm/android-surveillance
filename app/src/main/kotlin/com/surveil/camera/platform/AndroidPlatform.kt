@@ -1,7 +1,10 @@
 package com.surveil.camera.platform
 
 import android.content.Context
+import android.content.res.Configuration
+import android.os.LocaleList
 import android.util.Log
+import java.util.Locale
 import com.surveil.camera.BuildConfig
 import com.surveil.camera.capture.CameraCatalog
 import com.surveil.camera.capture.CapturePipeline
@@ -59,5 +62,21 @@ class AndroidPlatform(private val context: Context, private val catalog: CameraC
 
     override fun log(message: String) {
         Log.i("Core", message)
+    }
+
+    override fun setLocale(tag: String) {
+        val locale = when (tag) {
+            "en" -> Locale.ENGLISH
+            "ru" -> Locale("ru")
+            else -> null  // system default
+        }
+        val resources = context.resources
+        val config = resources.configuration
+        if (locale != null) {
+            config.setLocale(locale)
+        } else {
+            config.setLocale(LocaleList.getDefault()[0])
+        }
+        resources.updateConfiguration(config, resources.displayMetrics)
     }
 }
