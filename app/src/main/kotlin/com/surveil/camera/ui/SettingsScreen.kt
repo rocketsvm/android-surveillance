@@ -480,12 +480,12 @@ private fun TelegramChatRow(def: TextSetting, current: String, title: @Composabl
                 r.fold(
                     onSuccess = { list ->
                         when (list.size) {
-                            0 -> android.widget.Toast.makeText(context, "Чатов нет: напишите боту любое сообщение и повторите", android.widget.Toast.LENGTH_LONG).show()
+                            0 -> android.widget.Toast.makeText(context, context.getString(R.string.tg_no_chats), android.widget.Toast.LENGTH_LONG).show()
                             1 -> save(def.key, list[0].first)
                             else -> chats = list
                         }
                     },
-                    onFailure = { android.widget.Toast.makeText(context, it.message ?: "Ошибка поиска чатов", android.widget.Toast.LENGTH_LONG).show() },
+                    onFailure = { android.widget.Toast.makeText(context, it.message ?: context.getString(R.string.tg_find_error), android.widget.Toast.LENGTH_LONG).show() },
                 )
             }
         }) { Text(stringResource(R.string.settings_find)) }
