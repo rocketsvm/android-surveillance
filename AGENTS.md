@@ -1,8 +1,16 @@
 # Surveillance Camera — notes for developers and agents
 
 Android app that turns a phone into a LAN IP camera: H.264 live stream in the browser,
-motion detection, recording, web UI with all settings. User-facing docs: README.md (Russian).
-Working notes, toolchain quirks and test results: NOTES.md.
+motion detection, recording, web UI with all settings. User-facing docs: README.md (English),
+README_RU.md (Russian). Working notes, toolchain quirks and test results: NOTES.md.
+
+## Localization
+
+- Phone app: Android resource strings in `app/src/main/res/values/` (English) and `values-ru/` (Russian).
+- Web UI: client-side translation in `core/src/main/resources/web/assets/app.js` (`STRINGS` objects,
+  `t()` function). Language preference stored in localStorage, defaults to system language.
+- Settings group titles: translated client-side via `GROUP_TITLES` map (server returns Russian titles).
+- Language setting: `sys.language` (auto/en/ru) in Settings → System.
 
 ## Modules
 
