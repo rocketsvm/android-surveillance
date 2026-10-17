@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -243,6 +244,7 @@ private fun unitString(unit: String?): String? {
 @Composable
 private fun SettingRow(def: Setting, settings: Settings, options: (String) -> List<Option>?, onZones: () -> Unit) {
     var dialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val title = settingTitle(def.key)
     val help = settingHelp(def.key)
 
@@ -301,7 +303,8 @@ private fun SettingRow(def: Setting, settings: Settings, options: (String) -> Li
             }
             if (dialog) ChoiceDialog(title, opts, current, onDismiss = { dialog = false }) { v ->
                 dialog = false
-                save(def.key, v)
+                if (def.key == Keys.LANGUAGE) save(def.key, v, context)
+                else save(def.key, v)
             }
         }
 
@@ -513,11 +516,11 @@ private fun TelegramChatRow(def: TextSetting, current: String, title: @Composabl
     }
 }
 
-private fun save(key: String, value: Any) {
+private fun save(key: String, value: Any, context: android.content.Context? = null) {
     kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
         com.surveil.camera.App.settings.set(key, value)
-        if (key == com.surveil.core.settings.Keys.LANGUAGE) {
-            val platform = AndroidPlatform(com.surveil.camera.App.instance, com.surveil.camera.capture.CameraCatalog(com.surveil.camera.App.instance))
+        if (key == com.surveil.core.settings.Keys.LANGUAGE && context != null) {
+            val platform = AndroidPlatform(context, com.surveil.camera.capture.CameraCatalog(context))
             platform.setLocale(value.toString())
         }
     }
