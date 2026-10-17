@@ -265,7 +265,7 @@
     <string name="guide_connect_text">1. Connect this phone and your computer (or another phone) to the same Wi-Fi network.
 2. Open the address below in a browser - or scan the QR code.
 3. To keep the address stable, reserve an IP for this phone in your router settings (DHCP reservation).</string>
-    <string name="guide_internet_hint">Internet access: install a VPN (e.g., Tailscale or ZeroTier) on this phone and the device you watch from - the VPN address will appear in the list. Do not open a port on your router without a password.</string>
+    <string name="guide_internet_hint">Internet access: install a VPN (e.g., Tailscale or ZeroTier) on this phone and the device you\'re watching from - the VPN address will appear in the list. Don\'t open a port on your router without a password.</string>
     <string name="guide_step_autostart">Autostart after reboot</string>
     <string name="guide_autostart_switch">Start camera after phone reboot</string>
     <string name="guide_overlay_perm">"Display over other apps" permission</string>
