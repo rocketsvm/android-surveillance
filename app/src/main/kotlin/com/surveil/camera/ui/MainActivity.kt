@@ -49,13 +49,29 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleAutostart(intent)
-        // Apply language setting on startup
+        // Apply language setting on startup (without recreating activity)
         val lang = App.settings.current.string(Keys.LANGUAGE)
         if (lang == "auto" || lang.isEmpty()) {
-            val platform = AndroidPlatform(this, CameraCatalog(this))
-            platform.setLocale("auto")
+            applyLocale("auto")
+        } else {
+            applyLocale(lang)
         }
         setContent { SurveilTheme { Root() } }
+    }
+
+    private fun applyLocale(tag: String) {
+        val locale = when (tag) {
+            "en" -> java.util.Locale.ENGLISH
+            "ru" -> java.util.Locale("ru")
+            else -> null  // system default
+        }
+        val config = android.content.res.Configuration(resources.configuration)
+        if (locale != null) {
+            config.setLocale(locale)
+        } else {
+            config.setLocale(android.os.LocaleList.getDefault()[0])
+        }
+        resources.updateConfiguration(config, resources.displayMetrics)
     }
 
     override fun onNewIntent(intent: Intent) {
