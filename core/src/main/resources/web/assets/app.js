@@ -67,6 +67,67 @@ const STRINGS = {
     audio_not_recording: 'Звук не записывается',
     microphone_unavailable: 'микрофон недоступен',
     microphone_working: 'Микрофон работает',
+    login_required: 'Требуется вход',
+    no_connection: 'Нет связи',
+    live: 'В эфире',
+    camera_error_prefix: 'Ошибка камеры: ',
+    starting: 'Запуск…',
+    browser_not_supported: 'Этот браузер не поддерживает воспроизведение H.264 через Media Source Extensions. Откройте страницу в Chrome, Edge, Firefox или Safari.',
+    iphone_not_supported: 'На iPhone живое видео в браузере работает с iOS 17.1. Обновите систему или откройте поток в приложении VLC: ',
+    connecting: 'Подключение к камере…',
+    nothing_yet: 'Пока ничего',
+    trigger_motion: 'Движение',
+    trigger_continuous: 'Непрерывная',
+    trigger_manual: 'Ручная',
+    trigger_recovered: 'Восстановлена',
+    recording_singular: 'запись',
+    recording_plural: 'записи',
+    recording_many: 'записей',
+    recording_in_progress: 'Идёт запись',
+    delete_recording_confirm: 'Удалить эту запись?',
+    no_events_yet: 'Событий пока нет',
+    open_recording: 'Открыть запись',
+    lang_system: 'Как в системе / System default',
+    lang_ru: 'Русский',
+    auto: 'Авто',
+    configure: 'Настроить',
+    zones_excluded: 'Есть исключённые зоны',
+    zones_none: 'Весь кадр',
+    find: 'Найти',
+    use_chat: 'Использовать чат «',
+    chat_suffix: '» (',
+    new_value: 'Новое значение',
+    set_password: 'Задать пароль',
+    paste_value: 'Вставьте значение',
+    save: 'Сохранить',
+    remove: 'Убрать',
+    disable_password_confirm: 'Отключить защиту паролем? Доступ к камере получит любой в этой сети.',
+    password_set_notice: 'Пароль установлен',
+    password_not_set_notice: 'Пароль не установлен — доступ открыт всем в сети',
+    set_notice: 'Задан',
+    not_set_notice: 'Не задан',
+    connection_info: 'Подключение и сведения',
+    wifi: 'Wi-Fi',
+    ethernet: 'Ethernet',
+    hotspot: 'Точка доступа',
+    vpn: 'VPN',
+    mobile: 'Мобильная сеть',
+    network: 'Сеть',
+    copy: 'Копировать',
+    web_interface: 'Веб-интерфейс',
+    stream_for_vlc: 'Поток для VLC, видеорегистратора, Home Assistant',
+    device: 'Устройство',
+    encoder: 'Кодировщик',
+    version: 'Версия',
+    uptime: 'Работает',
+    restart_camera: 'Перезапустить камеру',
+    clear: 'Очистить',
+    invert: 'Инвертировать',
+    motion_zones: 'Зоны детекции движения',
+    zones_hint: 'Проведите по клеткам, чтобы исключить их из детекции (заштрихованы красным). Например, дорогу, деревья или телевизор.',
+    cancel: 'Отмена',
+    login_title: 'Вход',
+    unavailable: 'unavailable: ',
   },
   en: {
     app_title: 'Surveillance',
@@ -133,6 +194,67 @@ const STRINGS = {
     audio_not_recording: 'Audio not recording',
     microphone_unavailable: 'microphone unavailable',
     microphone_working: 'Microphone working',
+    login_required: 'Login required',
+    no_connection: 'No connection',
+    live: 'Live',
+    camera_error_prefix: 'Camera error: ',
+    starting: 'Starting…',
+    browser_not_supported: 'This browser does not support H.264 playback via Media Source Extensions. Open the page in Chrome, Edge, Firefox or Safari.',
+    iphone_not_supported: 'On iPhone, live video in the browser works from iOS 17.1. Update your system or open the stream in VLC: ',
+    connecting: 'Connecting to camera…',
+    nothing_yet: 'Nothing yet',
+    trigger_motion: 'Motion',
+    trigger_continuous: 'Continuous',
+    trigger_manual: 'Manual',
+    trigger_recovered: 'Recovered',
+    recording_singular: 'recording',
+    recording_plural: 'recordings',
+    recording_many: 'recordings',
+    recording_in_progress: 'Recording in progress',
+    delete_recording_confirm: 'Delete this recording?',
+    no_events_yet: 'No events yet',
+    open_recording: 'Open recording',
+    lang_system: 'System default',
+    lang_ru: 'Русский',
+    auto: 'Auto',
+    configure: 'Configure',
+    zones_excluded: 'Some zones excluded',
+    zones_none: 'Full frame',
+    find: 'Find',
+    use_chat: 'Use chat «',
+    chat_suffix: '» (',
+    new_value: 'New value',
+    set_password: 'Set password',
+    paste_value: 'Paste value',
+    save: 'Save',
+    remove: 'Remove',
+    disable_password_confirm: 'Disable password protection? Anyone on this network will be able to access the camera.',
+    password_set_notice: 'Password set',
+    password_not_set_notice: 'No password — open to everyone on the network',
+    set_notice: 'Set',
+    not_set_notice: 'Not set',
+    connection_info: 'Connection info',
+    wifi: 'Wi-Fi',
+    ethernet: 'Ethernet',
+    hotspot: 'Hotspot',
+    vpn: 'VPN',
+    mobile: 'Mobile',
+    network: 'Network',
+    copy: 'Copy',
+    web_interface: 'Web interface',
+    stream_for_vlc: 'Stream for VLC, NVR, Home Assistant',
+    device: 'Device',
+    encoder: 'Encoder',
+    version: 'Version',
+    uptime: 'Uptime',
+    restart_camera: 'Restart camera',
+    clear: 'Clear',
+    invert: 'Invert',
+    motion_zones: 'Motion detection zones',
+    zones_hint: 'Swipe across cells to exclude them from detection (shaded red). For example, a road, trees, or a TV.',
+    cancel: 'Cancel',
+    login_title: 'Login',
+    unavailable: 'unavailable: ',
   },
 };
 
@@ -266,7 +388,7 @@ async function api(path, opts = {}) {
   const r = await fetch(path, init);
   let data = null;
   if ((r.headers.get('content-type') || '').includes('json')) data = await r.json().catch(() => null);
-  if (r.status === 401 && path !== '/api/login') { showLogin(); throw new ApiError(401, 'Требуется вход'); }
+  if (r.status === 401 && path !== '/api/login') { showLogin(); throw new ApiError(401, t('login_required')); }
   if (!r.ok) throw new ApiError(r.status, (data && data.error) || r.statusText);
   return data;
 }
@@ -355,7 +477,7 @@ function connectEvents() {
   };
   ws.onclose = () => {
     if (eventsWs !== ws) return;
-    setLive('err', 'Нет связи');
+    setLive('err', t('no_connection'));
     setTimeout(async () => {
       try {
         const s = await api('/api/session');
@@ -383,9 +505,9 @@ function updateStatus(st) {
   $('#cam-name').textContent = st.name || t('camera');
   document.title = (st.name || t('camera')) + ' — ' + t('app_title');
   const cam = st.camera || {};
-  if (cam.state === 'running') setLive('on', 'В эфире');
-  else if (cam.state === 'error') setLive('err', 'Ошибка камеры');
-  else if (cam.state === 'starting') setLive('', 'Запуск…');
+  if (cam.state === 'running') setLive('on', t('live'));
+  else if (cam.state === 'error') setLive('err', t('camera_error'));
+  else if (cam.state === 'starting') setLive('', t('starting'));
   else setLive('err', t('camera_stopped'));
 
   const rec = st.recording || {};
@@ -407,7 +529,7 @@ function updateStatus(st) {
   $('#st-uptime').textContent = st.uptimeSec != null ? fmtUptime(st.uptimeSec) : '—';
   $('#logout-btn').hidden = !st.authRequired;
   if (st.motion) updateMotion(st.motion);
-  if (cam.state === 'error' && S.view === 'live') stageMessage('Ошибка камеры: ' + (cam.error || 'неизвестно'), true);
+  if (cam.state === 'error' && S.view === 'live') stageMessage(t('camera_error_prefix') + (cam.error || 'unknown'), true);
   if (S.view === 'settings') { renderInfo(); renderNotices(); }
 }
 
@@ -465,11 +587,11 @@ function stageMessage(text, isError) {
 function unsupportedMessage() {
   // iPhone Safari has (Managed)MediaSource only since iOS 17.1; other browsers there use the same engine.
   if (!/iPhone|iPod/.test(navigator.userAgent)) {
-    return 'Этот браузер не поддерживает воспроизведение H.264 через Media Source Extensions. Откройте страницу в Chrome, Edge, Firefox или Safari.';
+    return t('browser_not_supported');
   }
   const rtsp = S.status && S.status.rtsp;
   const alt = rtsp && rtsp.enabled && rtsp.port ? `rtsp://${location.hostname}:${rtsp.port}/live` : `http://${location.host}/live.mp4`;
-  return `На iPhone живое видео в браузере работает с iOS 17.1. Обновите систему или откройте поток в приложении VLC: ${alt}`;
+  return `${t('iphone_not_supported')}${alt}`;
 }
 
 function startPlayer() {
@@ -482,7 +604,7 @@ function startPlayer() {
     player = new LivePlayer($('#video'), {
       onState: (s, msg) => {
         if (s === 'playing') stageMessage(null);
-        else if (s === 'connecting') stageMessage('Подключение к камере…');
+        else if (s === 'connecting') stageMessage(t('connecting'));
         else if (s === 'paused') { stageMessage(null); $('#stage-play').hidden = false; }
         else if (s === 'error') stageMessage(msg, true);
         else if (msg) stageMessage(msg);
@@ -553,7 +675,7 @@ function renderMiniEvents() {
   const ul = $('#mini-events');
   ul.textContent = '';
   const list = S.events.slice(0, 6);
-  if (!list.length) { ul.append(h('li', { class: 'muted', text: 'Пока ничего' })); return; }
+  if (!list.length) { ul.append(h('li', { class: 'muted', text: t('nothing_yet') })); return; }
   for (const e of list) ul.append(h('li', null, h('time', { text: fmtShortTime(e.timeMs) }), h('span', { text: e.message })));
 }
 
@@ -568,7 +690,7 @@ async function loadRecordings() {
   } catch (e) { if (e.status !== 401) toast(t('failed_to_load_recordings') + ': ' + e.message, true); }
 }
 
-const TRIGGERS = { motion: 'Движение', continuous: 'Непрерывная', manual: 'Ручная', recovered: 'Восстановлена' };
+const TRIGGERS = { motion: 'motion', continuous: 'continuous', manual: 'manual', recovered: 'recovered' };
 
 function filteredRecordings() {
   return S.filter === 'all' ? S.recordings : S.recordings.filter((r) => r.trigger === S.filter);
@@ -603,7 +725,7 @@ function renderRecordings() {
     box.append(h('div', { class: 'day' },
       h('div', { class: 'day-head' },
         h('h2', { text: fmtDay(items[0].startMs) }),
-        h('span', { text: real.length ? `${real.length} ${plural(real.length, ['запись', 'записи', 'записей'])} · ${fmtDuration(dur)}` : '' })),
+        h('span', { text: real.length ? `${real.length} ${plural(real.length, [t('recording_singular'), t('recording_plural'), t('recording_many')])} · ${fmtDuration(dur)}` : '' })),
       grid));
   }
   $('#btn-more').hidden = list.length <= S.shown;
@@ -614,9 +736,9 @@ function recCard(r) {
   if (r.live) {
     return h('div', { class: 'rec-card' },
       h('div', { class: 'rec-thumb' },
-        h('div', { class: 'live-rec' }, h('span', { class: 'dot' }), 'Идёт запись')),
+        h('div', { class: 'live-rec' }, h('span', { class: 'dot' }), t('recording_in_progress')),
       h('div', { class: 'rec-meta' },
-        h('div', null, h('div', { class: 'rec-time', text: fmtTime(r.startMs) }), h('div', { class: 'rec-sub', text: TRIGGERS[r.trigger] || '' })),
+        h('div', null, h('div', { class: 'rec-time', text: fmtTime(r.startMs) }), h('div', { class: 'rec-sub', text: t('trigger_' + TRIGGERS[r.trigger]) || '' })),
       ));
   }
   const thumb = h('div', { class: 'rec-thumb' });
@@ -629,7 +751,7 @@ function recCard(r) {
       h('div', null,
         h('div', { class: 'rec-time', text: fmtTime(r.startMs) }),
         h('div', { class: 'rec-sub', text: fmtBytes(r.sizeBytes) + (r.width ? ` · ${r.height}p` : '') })),
-      h('span', { class: 'tag ' + r.trigger, text: TRIGGERS[r.trigger] || r.trigger })));
+      h('span', { class: 'tag ' + r.trigger, text: t('trigger_' + TRIGGERS[r.trigger]) || r.trigger })));
   card.onclick = () => {
     if (S.selecting) {
       if (S.selected.has(r.id)) S.selected.delete(r.id); else S.selected.add(r.id);
@@ -660,7 +782,7 @@ function openRecording(id) {
     const dl = h('a', { class: 'btn', href: `/rec/${r.id}.mp4?download=1` }, icon('download'), t('download'));
     const del = h('button', { class: 'btn danger' }, icon('trash'), t('delete'));
     del.onclick = async () => {
-      if (!confirm('Удалить эту запись?')) return;
+      if (!confirm(t('delete_recording_confirm'))) return;
       try {
         await api('/api/recordings/' + encodeURIComponent(r.id), { method: 'DELETE' });
         S.recordings = S.recordings.filter((x) => x.id !== r.id);
@@ -672,7 +794,7 @@ function openRecording(id) {
       } catch (e) { toast(e.message, true); }
     };
     openModal({
-      title: `${fmtDateTime(r.startMs)} · ${fmtDuration(r.durationMs)} · ${TRIGGERS[r.trigger] || ''}`,
+      title: `${fmtDateTime(r.startMs)} · ${fmtDuration(r.durationMs)} · ${t('trigger_' + TRIGGERS[r.trigger]) || ''}`,
       body: video,
       foot: [h('div', { class: 'btn-row' }, prev, next), h('div', { class: 'btn-row' }, dl, del)],
     });
@@ -718,11 +840,11 @@ async function loadEvents() {
 function renderEvents() {
   const ul = $('#events-list');
   ul.textContent = '';
-  if (!S.events.length) { ul.append(h('li', { class: 'muted', text: 'Событий пока нет' })); return; }
+  if (!S.events.length) { ul.append(h('li', { class: 'muted', text: t('no_events_yet') })); return; }
   for (const e of S.events) {
     const body = h('div', { class: 'ev-body' }, h('div', { text: e.message }), h('div', { class: 'ev-time', text: fmtDateTime(e.timeMs) }));
     if (e.recordingId) {
-      const a = h('a', { href: '#/recordings', class: 'ev-link', text: 'Открыть запись' });
+      const a = h('a', { href: '#/recordings', class: 'ev-link', text: t('open_recording') });
       a.onclick = async (ev) => {
         ev.preventDefault();
         if (!S.recordings.length) await loadRecordings();
@@ -794,7 +916,7 @@ function renderSettings() {
   // Language selector card
   const langCard = h('div', { class: 'card group' }, h('h2', { text: t('language') }));
   const langSelect = h('select', { class: 'input', style: 'max-width:200px' });
-  for (const [code, label] of [['auto', 'Как в системе / System default'], ['en', 'English'], ['ru', 'Русский']]) {
+  for (const [code, label] of [['auto', t('lang_system')], ['en', 'English'], ['ru', t('lang_ru')]]) {
     const opt = h('option', { value: code, selected: getLang() === code });
     opt.textContent = label;
     langSelect.append(opt);
@@ -862,7 +984,7 @@ function renderField(def) {
   } else if (def.type === 'choice') {
     const sel = h('select');
     const opts = def.options || [];
-    if (!opts.some((o) => o.value === value)) sel.append(h('option', { value: value, text: value || 'Авто' }));
+    if (!opts.some((o) => o.value === value)) sel.append(h('option', { value: value, text: value || t('auto') }));
     for (const o of opts) sel.append(h('option', { value: o.value, text: o.label }));
     sel.value = value;
     sel.onchange = () => saveSetting(def.key, sel.value, field);
@@ -881,20 +1003,20 @@ function renderField(def) {
       row.append(h('div', { class: 'field-control' }, num, def.unit ? h('span', { class: 'muted', text: def.unit }) : null));
     }
   } else if (def.type === 'text' && def.editor === 'zones') {
-    const btn = h('button', { class: 'btn', type: 'button' }, icon('grid'), 'Настроить');
+    const btn = h('button', { class: 'btn', type: 'button' }, icon('grid'), t('configure'));
     btn.onclick = () => openZonesEditor(def);
-    const info = h('span', { class: 'muted', text: value ? 'Есть исключённые зоны' : 'Весь кадр' });
+    const info = h('span', { class: 'muted', text: value ? t('zones_excluded') : t('zones_none') });
     row.append(h('div', { class: 'field-control' }, info, btn));
   } else if (def.type === 'text' && def.editor === 'tg-chat') {
     const input = h('input', { type: 'text', maxlength: def.maxLength, value, placeholder: '123456789' });
     input.onchange = () => saveSetting(def.key, input.value.trim(), field);
-    const find = h('button', { class: 'btn', type: 'button', text: 'Найти' });
+    const find = h('button', { class: 'btn', type: 'button', text: t('find') });
     find.onclick = async () => {
       try {
         const r = await api('/api/notify/chats', { body: {} });
         const chats = r.chats || [];
         if (!chats.length) { toast(t('no_chats'), true); return; }
-        const pick = chats.length === 1 ? chats[0] : chats.find((c) => confirm('Использовать чат «' + c.title + '» (' + c.id + ')?'));
+        const pick = chats.length === 1 ? chats[0] : chats.find((c) => confirm(`${t('use_chat')}${c.title}${t('chat_suffix')}${c.id})?`));
         if (pick && await saveSetting(def.key, pick.id, field)) { input.value = pick.id; toast(t('chat') + ': ' + pick.title); }
       } catch (e) { toast(e.message, true); }
     };
@@ -906,8 +1028,8 @@ function renderField(def) {
   } else if (def.type === 'secret') {
     const isSet = def.isSet;
     const isPassword = def.key === 'net.password';
-    const input = h('input', { type: 'password', placeholder: isSet ? 'Новое значение' : (isPassword ? 'Задать пароль' : 'Вставьте значение'), autocomplete: 'new-password', maxlength: def.maxLength });
-    const save = h('button', { class: 'btn primary', type: 'button', text: 'Сохранить' });
+    const input = h('input', { type: 'password', placeholder: isSet ? t('new_value') : (isPassword ? t('set_password') : t('paste_value')), autocomplete: 'new-password', maxlength: def.maxLength });
+    const save = h('button', { class: 'btn primary', type: 'button', text: t('save') });
     save.onclick = async () => {
       const v = input.value.trim();
       if (!v) { toast(t('field_empty'), true); return; }
@@ -922,17 +1044,17 @@ function renderField(def) {
     };
     const ctl = h('div', { class: 'field-control' }, input, save);
     if (isSet) {
-      const clear = h('button', { class: 'btn ghost', type: 'button', text: 'Убрать' });
+      const clear = h('button', { class: 'btn ghost', type: 'button', text: t('remove') });
       clear.onclick = async () => {
-        if (isPassword && !confirm('Отключить защиту паролем? Доступ к камере получит любой в этой сети.')) return;
+        if (isPassword && !confirm(t('disable_password_confirm'))) return;
         if (await saveSetting(def.key, '', field)) loadSettings();
       };
       ctl.append(clear);
     }
     field.append(h('div', { class: 'range-wrap' }, ctl));
     const state = isPassword
-      ? (isSet ? 'Пароль установлен' : 'Пароль не установлен — доступ открыт всем в сети')
-      : (isSet ? 'Задан' : 'Не задан');
+      ? (isSet ? t('password_set_notice') : t('password_not_set_notice'))
+      : (isSet ? t('set_notice') : t('not_set_notice'));
     label.append(h('div', { class: 'field-help', text: state }));
   }
   return field;
@@ -957,17 +1079,17 @@ function renderInfo() {
   const card = $('#info-card');
   if (!st) return;
   card.textContent = '';
-  card.append(h('h2', { text: 'Подключение и сведения' }));
+  card.append(h('h2', { text: t('connection_info') }));
   const port = st.port || location.port || 80;
   const list = h('div', { class: 'addr-list' });
-  const kinds = { wifi: 'Wi-Fi', ethernet: 'Ethernet', hotspot: 'Точка доступа', vpn: 'VPN', mobile: 'Мобильная сеть', other: 'Сеть' };
+  const kinds = { wifi: 'Wi-Fi', ethernet: 'Ethernet', hotspot: t('hotspot'), vpn: 'VPN', mobile: t('mobile'), other: t('network') };
   for (const a of (st.network || []).filter((x) => !x.ipv6)) {
     const url = `http://${a.address}:${port}/`;
-    const copy = h('button', { class: 'icon-btn', title: 'Копировать' }, icon('copy'));
+    const copy = h('button', { class: 'icon-btn', title: t('copy') }, icon('copy'));
     copy.onclick = () => copyText(url);
     list.append(h('div', { class: 'addr' }, h('code', { text: url }), copy, h('span', { class: 'kind', text: `${kinds[a.kind] || a.kind} · ${a.iface}` })));
   }
-  card.append(h('div', { class: 'card-title', text: 'Веб-интерфейс' }), list);
+  card.append(h('div', { class: 'card-title', text: t('web_interface') }), list);
   const host = (st.network || []).find((x) => !x.ipv6);
   if (host) {
     const streams = [];
@@ -975,20 +1097,20 @@ function renderInfo() {
     streams.push([`http://${host.address}:${port}/live.mp4`, 'HTTP']);
     const list2 = h('div', { class: 'addr-list' });
     for (const [url, kind] of streams) {
-      const copy = h('button', { class: 'icon-btn', title: 'Копировать' }, icon('copy'));
+      const copy = h('button', { class: 'icon-btn', title: t('copy') }, icon('copy'));
       copy.onclick = () => copyText(url);
       list2.append(h('div', { class: 'addr' }, h('code', { text: url }), copy, h('span', { class: 'kind', text: kind })));
     }
-    card.append(h('div', { class: 'card-title', text: 'Поток для VLC, видеорегистратора, Home Assistant' }), list2);
+    card.append(h('div', { class: 'card-title', text: t('stream_for_vlc') }), list2);
     if (st.rtsp && st.rtsp.error) card.append(h('div', { class: 'group-notice warn', text: st.rtsp.error }));
   }
   const d = st.device || {};
   card.append(h('dl', { class: 'kv' },
-    h('dt', { text: 'Устройство' }), h('dd', { text: [d.model, d.os].filter(Boolean).join(', ') || '—' }),
-    h('dt', { text: 'Кодировщик' }), h('dd', { text: (st.camera && st.camera.encoder) || '—' }),
-    h('dt', { text: 'Версия' }), h('dd', { text: st.version || '—' }),
-    h('dt', { text: 'Работает' }), h('dd', { text: fmtUptime(st.uptimeSec || 0) })));
-  const restart = h('button', { class: 'btn', style: 'margin-top:14px' }, icon('refresh'), 'Перезапустить камеру');
+    h('dt', { text: t('device') }), h('dd', { text: [d.model, d.os].filter(Boolean).join(', ') || '—' }),
+    h('dt', { text: t('encoder') }), h('dd', { text: (st.camera && st.camera.encoder) || '—' }),
+    h('dt', { text: t('version') }), h('dd', { text: st.version || '—' }),
+    h('dt', { text: t('uptime') }), h('dd', { text: fmtUptime(st.uptimeSec || 0) })));
+  const restart = h('button', { class: 'btn', style: 'margin-top:14px' }, icon('refresh'), t('restart_camera'));
   restart.onclick = async () => { await api('/api/camera/restart', { body: {} }).catch((e) => toast(e.message, true)); toast(t('camera_restarting')); };
   card.append(restart);
 }
@@ -1073,19 +1195,19 @@ function openZonesEditor(def) {
   grid.addEventListener('pointerup', end);
   grid.addEventListener('pointercancel', end);
 
-  const clear = h('button', { class: 'btn ghost', type: 'button', text: 'Очистить' });
+  const clear = h('button', { class: 'btn ghost', type: 'button', text: t('clear') });
   clear.onclick = () => { z.bits.fill(false); build(); };
-  const invert = h('button', { class: 'btn ghost', type: 'button', text: 'Инвертировать' });
+  const invert = h('button', { class: 'btn ghost', type: 'button', text: t('invert') });
   invert.onclick = () => { z.bits = z.bits.map((b) => !b); build(); };
-  const save = h('button', { class: 'btn primary', type: 'button', text: 'Сохранить' });
+  const save = h('button', { class: 'btn primary', type: 'button', text: t('save') });
   save.onclick = async () => {
     if (await saveSetting(def.key, formatZones(z))) { closeModal(); renderSettings(); }
   };
-  const cancel = h('button', { class: 'btn ghost', type: 'button', text: 'Отмена' });
+  const cancel = h('button', { class: 'btn ghost', type: 'button', text: t('cancel') });
   cancel.onclick = closeModal;
   openModal({
-    title: 'Зоны детекции движения',
-    body: [wrap, h('div', { class: 'zones-hint', text: 'Проведите по клеткам, чтобы исключить их из детекции (заштрихованы красным). Например, дорогу, деревья или телевизор.' })],
+    title: t('motion_zones'),
+    body: [wrap, h('div', { class: 'zones-hint', text: t('zones_hint') })],
     foot: [h('div', { class: 'btn-row' }, clear, invert), h('div', { class: 'btn-row' }, cancel, save)],
   });
 }
@@ -1168,7 +1290,7 @@ async function boot() {
     if (s.name) $('#cam-name').textContent = s.name;
     if (s.authRequired && !s.authorized) { $('#login-title').textContent = s.name || t('login_title'); showLogin(); return; }
   } catch (e) {
-    stageMessage(t('camera') + ' unavailable: ' + e.message, true);
+    stageMessage(t('camera') + ' ' + t('unavailable') + e.message, true);
   }
   start();
 }
