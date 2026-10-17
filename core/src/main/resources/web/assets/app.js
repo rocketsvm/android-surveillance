@@ -44,6 +44,24 @@ const STRINGS = {
     chat: 'Чат',
     send_test: 'Отправить тестовое сообщение',
     test_sent: 'Отправлено — проверьте Telegram',
+    recording_started: 'Запись началась',
+    recording_stopped: 'Запись остановлена',
+    failed_to_load_recordings: 'Не удалось загрузить записи',
+    recording_deleted: 'Запись удалена',
+    deleted: 'Удалено',
+    recording_still_writing: 'Запись ещё пишется или уже удалена',
+    saved_camera_restarting: 'Сохранено, камера перезапускается…',
+    port_changed: 'Порт изменён, переход на новый адрес…',
+    saved: 'Сохранено',
+    not_saved: 'Не сохранено',
+    no_chats: 'Чатов нет: напишите своему боту любое сообщение и повторите',
+    chat: 'Чат',
+    field_empty: 'Поле пустое',
+    password_set: 'Пароль установлен',
+    camera_restarting: 'Камера перезапускается…',
+    copied: 'Скопировано',
+    copy_address: 'Скопируйте адрес',
+    no_frame_from_camera: 'Нет кадра с камеры — зоны можно задать вслепую',
   },
   en: {
     app_title: 'Surveillance',
@@ -87,6 +105,24 @@ const STRINGS = {
     chat: 'Chat',
     send_test: 'Send test message',
     test_sent: 'Sent — check Telegram',
+    recording_started: 'Recording started',
+    recording_stopped: 'Recording stopped',
+    failed_to_load_recordings: 'Failed to load recordings',
+    recording_deleted: 'Recording deleted',
+    deleted: 'Deleted',
+    recording_still_writing: 'Recording still writing or already deleted',
+    saved_camera_restarting: 'Saved, camera restarting…',
+    port_changed: 'Port changed, navigating to new address…',
+    saved: 'Saved',
+    not_saved: 'Not saved',
+    no_chats: 'No chats: send your bot any message and try again',
+    chat: 'Chat',
+    field_empty: 'Field is empty',
+    password_set: 'Password set',
+    camera_restarting: 'Camera restarting…',
+    copied: 'Copied',
+    copy_address: 'Copy address',
+    no_frame_from_camera: 'No frame from camera — zones can be set blindly',
   },
 };
 
@@ -476,7 +512,7 @@ function initLive() {
     const on = !(S.status && S.status.recording && S.status.recording.manual);
     try {
       await api('/api/record', { body: { on } });
-      toast(on ? 'Запись началась' : 'Запись остановлена');
+      toast(on ? t('recording_started') : t('recording_stopped'));
     } catch (e) { toast(e.message, true); }
   };
   $('#btn-torch').onclick = () => saveSetting('camera.torch', !S.values['camera.torch']);
@@ -519,7 +555,7 @@ async function loadRecordings() {
     S.current = r.current || null;
     S.storage = r.storage || null;
     renderRecordings();
-  } catch (e) { if (e.status !== 401) toast('Не удалось загрузить записи: ' + e.message, true); }
+  } catch (e) { if (e.status !== 401) toast(t('failed_to_load_recordings') + ': ' + e.message, true); }
 }
 
 const TRIGGERS = { motion: 'Движение', continuous: 'Непрерывная', manual: 'Ручная', recovered: 'Восстановлена' };
@@ -619,7 +655,7 @@ function openRecording(id) {
         await api('/api/recordings/' + encodeURIComponent(r.id), { method: 'DELETE' });
         S.recordings = S.recordings.filter((x) => x.id !== r.id);
         list.splice(idx, 1);
-        toast('Запись удалена');
+        toast(t('recording_deleted'));
         renderRecordings();
         if (!list.length) closeModal();
         else { idx = Math.min(idx, list.length - 1); show(); }
@@ -652,7 +688,7 @@ function initRecordings() {
     if (!n || !confirm(`Удалить ${n} ${plural(n, ['запись', 'записи', 'записей'])}?`)) return;
     try {
       const r = await api('/api/recordings/delete', { body: { ids: Array.from(S.selected) } });
-      toast(`Удалено: ${r.deleted}`);
+      toast(`${t('deleted')}: ${r.deleted}`);
       S.selected.clear();
       S.selecting = false;
       loadRecordings();
@@ -681,7 +717,7 @@ function renderEvents() {
         ev.preventDefault();
         if (!S.recordings.length) await loadRecordings();
         if (S.recordings.some((r) => r.id === e.recordingId)) openRecording(e.recordingId);
-        else toast('Запись ещё пишется или уже удалена');
+        else toast(t('recording_still_writing'));
       };
       body.append(a);
     }
@@ -708,14 +744,14 @@ async function saveSetting(key, value, fieldEl) {
     updateFromValues();
     if (fieldEl) { fieldEl.classList.add('saved'); setTimeout(() => fieldEl.classList.remove('saved'), 1500); }
     const def = findDef(key);
-    if (def && def.apply === 'pipeline' && r.changed.length) toast('Saved, camera restarting…');
+    if (def && def.apply === 'pipeline' && r.changed.length) toast(t('saved_camera_restarting'));
     else if (def && def.apply === 'server' && r.changed.length) {
-      toast('Порт изменён, переход на новый адрес…');
+      toast(t('port_changed'));
       setTimeout(() => { location.port = String(value); }, 1500);
-    } else if (r.changed.length) toast('Saved');
+    } else if (r.changed.length) toast(t('saved'));
     return true;
   } catch (e) {
-    toast('Не сохранено: ' + e.message, true);
+    toast(t('not_saved') + ': ' + e.message, true);
     return false;
   }
 }
@@ -847,9 +883,9 @@ function renderField(def) {
       try {
         const r = await api('/api/notify/chats', { body: {} });
         const chats = r.chats || [];
-        if (!chats.length) { toast('Чатов нет: напишите своему боту любое сообщение и повторите', true); return; }
+        if (!chats.length) { toast(t('no_chats'), true); return; }
         const pick = chats.length === 1 ? chats[0] : chats.find((c) => confirm('Использовать чат «' + c.title + '» (' + c.id + ')?'));
-        if (pick && await saveSetting(def.key, pick.id, field)) { input.value = pick.id; toast('Чат: ' + pick.title); }
+        if (pick && await saveSetting(def.key, pick.id, field)) { input.value = pick.id; toast(t('chat') + ': ' + pick.title); }
       } catch (e) { toast(e.message, true); }
     };
     row.append(h('div', { class: 'field-control' }, input, find));
@@ -864,12 +900,12 @@ function renderField(def) {
     const save = h('button', { class: 'btn primary', type: 'button', text: 'Сохранить' });
     save.onclick = async () => {
       const v = input.value.trim();
-      if (!v) { toast('Поле пустое', true); return; }
+      if (!v) { toast(t('field_empty'), true); return; }
       if (await saveSetting(def.key, v, field)) {
         if (isPassword) {
           const user = S.values['net.username'] || 'admin';
           await api('/api/login', { body: { username: user, password: v } }).catch(() => {});
-          toast('Пароль установлен');
+          toast(t('password_set'));
         }
         loadSettings();
       }
@@ -943,12 +979,12 @@ function renderInfo() {
     h('dt', { text: 'Версия' }), h('dd', { text: st.version || '—' }),
     h('dt', { text: 'Работает' }), h('dd', { text: fmtUptime(st.uptimeSec || 0) })));
   const restart = h('button', { class: 'btn', style: 'margin-top:14px' }, icon('refresh'), 'Перезапустить камеру');
-  restart.onclick = async () => { await api('/api/camera/restart', { body: {} }).catch((e) => toast(e.message, true)); toast('Камера перезапускается…'); };
+  restart.onclick = async () => { await api('/api/camera/restart', { body: {} }).catch((e) => toast(e.message, true)); toast(t('camera_restarting')); };
   card.append(restart);
 }
 
 function copyText(t) {
-  const done = () => toast('Скопировано');
+  const done = () => toast(t('copied'));
   if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done));
   else fallbackCopy(t, done);
 }
@@ -957,7 +993,7 @@ function fallbackCopy(t, done) {
   ta.value = t;
   document.body.append(ta);
   ta.select();
-  try { document.execCommand('copy'); done(); } catch (e) { prompt('Скопируйте адрес:', t); }
+  try { document.execCommand('copy'); done(); } catch (e) { prompt(t('copy_address'), t); }
   ta.remove();
 }
 
@@ -1002,7 +1038,7 @@ function openZonesEditor(def) {
     z = { cols: dims[0], rows: dims[1], bits: new Array(dims[0] * dims[1]).fill(false) };
   };
   img.onload = () => { ensure(); build(); };
-  img.onerror = () => { ensure(); build(); toast('Нет кадра с камеры — зоны можно задать вслепую', true); };
+  img.onerror = () => { ensure(); build(); toast(t('no_frame_from_camera'), true); };
   let paint = null;
   const cellAt = (ev) => {
     const t = document.elementFromPoint(ev.clientX, ev.clientY);
