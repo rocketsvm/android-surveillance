@@ -635,8 +635,8 @@ function openRecording(id) {
   const show = () => {
     const r = list[idx];
     const video = h('video', { src: `/rec/${r.id}.mp4`, controls: true, autoplay: true, playsinline: true, preload: 'metadata' });
-    const prev = h('button', { class: 'btn ghost', disabled: idx >= list.length - 1, title: 'Предыдущая' }, icon('left'), 'Раньше');
-    const next = h('button', { class: 'btn ghost', disabled: idx <= 0, title: 'Следующая' }, 'Позже', icon('right'));
+    const prev = h('button', { class: 'btn ghost', disabled: idx >= list.length - 1, title: t('prev') }, icon('left'), t('earlier'));
+    const next = h('button', { class: 'btn ghost', disabled: idx <= 0, title: t('next') }, t('later'), icon('right'));
     prev.onclick = () => { idx++; show(); };
     next.onclick = () => { idx--; show(); };
     const dl = h('a', { class: 'btn', href: `/rec/${r.id}.mp4?download=1` }, icon('download'), t('download'));
