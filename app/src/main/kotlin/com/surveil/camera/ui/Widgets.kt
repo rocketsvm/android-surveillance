@@ -48,11 +48,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -176,19 +178,35 @@ fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true,
     }
     qrFor?.let { url ->
         val bmp = remember(url) { qrBitmap(url) }
-        // Landscape phones have ~400 dp of height: keep title, code and address on screen.
-        val qrSize = minOf(260, (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.42f).toInt()).dp
+        val config = LocalConfiguration.current
+        // Landscape phones have under 400 dp of height: the code goes beside the text there.
+        val landscape = config.screenWidthDp > config.screenHeightDp
+        val qrSize = minOf(260, (config.screenHeightDp * if (landscape) 0.5f else 0.42f).toInt()).dp
+        val hint = "Наведите камеру другого телефона"
+        val code = @Composable { Image(bmp, null, Modifier.size(qrSize).background(Color.White).padding(6.dp)) }
         AlertDialog(
             onDismissRequest = { qrFor = null },
             confirmButton = { TextButton(onClick = { qrFor = null }) { Text("Закрыть") } },
-            title = { Text("Наведите камеру другого телефона") },
+            title = if (landscape) null else ({ Text(hint) }),
             text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Image(bmp, null, Modifier.size(qrSize).background(Color.White).padding(6.dp))
-                    Spacer(Modifier.height(10.dp))
-                    Text(url, fontFamily = FontFamily.Monospace)
+                if (landscape) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        code()
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(hint, style = MaterialTheme.typography.titleLarge)
+                            Text(url, fontFamily = FontFamily.Monospace)
+                        }
+                    }
+                } else {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        code()
+                        Spacer(Modifier.height(10.dp))
+                        Text(url, fontFamily = FontFamily.Monospace)
+                    }
                 }
             },
+            // the platform dialog width (~320 dp) is too narrow for code and text side by side
+            properties = DialogProperties(usePlatformDefaultWidth = !landscape),
         )
     }
 }

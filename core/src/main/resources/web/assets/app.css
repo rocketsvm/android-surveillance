@@ -69,11 +69,13 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 650; min-width: 0; }
 .brand-mark {
+  flex: none;
   width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
   background: linear-gradient(135deg, var(--accent), #7a5cff); color: #fff;
 }
 .brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; font-size: 16px; }
-.pills { display: flex; gap: 6px; flex-wrap: nowrap; }
+/* only the camera name may shrink when the bar gets tight */
+.pills { display: flex; gap: 6px; flex-wrap: nowrap; flex: none; }
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
   height: 26px; padding: 0 10px; border-radius: 99px;
@@ -92,7 +94,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .pill-motion { color: #1b1300; background: var(--warn); border-color: var(--warn); }
 @keyframes blink { 50% { opacity: .2; } }
 
-.tabs { display: flex; gap: 4px; margin-left: auto; }
+.tabs { display: flex; gap: 4px; margin-left: auto; flex: none; }
 .tabs a {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 14px; border-radius: 10px;
@@ -100,7 +102,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .tabs a:hover { background: var(--surface-2); color: var(--text); }
 .tabs a.active { background: var(--accent-soft); color: var(--accent); }
-.top-actions { display: flex; gap: 4px; }
+.top-actions { display: flex; gap: 4px; flex: none; }
 .icon-btn {
   width: 36px; height: 36px; display: grid; place-items: center;
   border: 0; border-radius: 10px; background: transparent; color: var(--text-2); cursor: pointer;
@@ -359,6 +361,10 @@ input:focus-visible + .switch { outline: 2px solid var(--accent); outline-offset
 @media (max-width: 1100px) {
   .live-layout { grid-template-columns: 1fr; }
   .side { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  /* tablets and landscape phones: status pills as icons, tighter tabs */
+  .pill .t { display: none; }
+  .topbar { gap: 12px; }
+  .tabs a { padding: 8px 10px; gap: 6px; }
 }
 @media (max-width: 760px) {
   :root { --topbar-h: 54px; }
@@ -399,4 +405,12 @@ input:focus-visible + .switch { outline: 2px solid var(--accent); outline-offset
   .modal { padding: 0; }
   .modal-box { border-radius: 0; height: 100%; }
   .toasts { bottom: 90px; }
+}
+/* Landscape phones: video and controls never fit together, so the video takes the screen height
+   and the controls are a scroll away. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .stage { width: min(100%, calc((100vh - var(--topbar-h) - 28px) * var(--ar))); }
+}
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 760px) {
+  .stage { width: min(100%, calc((100vh - var(--topbar-h) - 96px) * var(--ar))); }
 }

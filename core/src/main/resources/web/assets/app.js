@@ -205,6 +205,7 @@ function setLive(kind, text) {
   p.classList.toggle('on', kind === 'on');
   p.classList.toggle('err', kind === 'err');
   $('.t', p).textContent = text;
+  p.title = text;   // the text is hidden on narrow screens
 }
 
 function updateStatus(st) {

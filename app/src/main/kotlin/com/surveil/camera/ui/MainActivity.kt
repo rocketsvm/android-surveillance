@@ -177,7 +177,11 @@ class MainActivity : ComponentActivity() {
 
         val home = HomeState(engine != null, status, settings, addresses, cameraGranted, batteryOptimized)
         BackHandler(enabled = screen != "home" || dim) {
-            if (dim) dim = false else screen = "home"
+            when {
+                dim -> dim = false
+                screen == "zones" -> screen = "settings"   // same as the editor's own back arrow
+                else -> screen = "home"
+            }
         }
         if (dim) {
             DimOverlay { dim = false }
