@@ -1,5 +1,7 @@
 # Android Surveillance Camera
 
+[Русская версия](README_RU.md) · [Releases](https://github.com/rocketsvm/android-surveillance/releases)
+
 Turns an Android phone into an IP security camera:
 
 - **Live H.264 video** in your browser on a computer or another phone — with about half a second of latency,

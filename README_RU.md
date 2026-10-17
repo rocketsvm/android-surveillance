@@ -1,5 +1,7 @@
 # Камера наблюдения для Android
 
+[English version](README.md) · [Релизы](https://github.com/rocketsvm/android-surveillance/releases)
+
 Превращает Android-телефон в IP-камеру наблюдения:
 
 - **Живое видео H.264** в браузере на компьютере или другом телефоне — с задержкой около полсекунды,
