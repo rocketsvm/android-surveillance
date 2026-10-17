@@ -2,6 +2,8 @@ package com.surveil.camera.platform
 
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Handler
+import android.os.Looper
 import android.os.LocaleList
 import android.util.Log
 import java.util.Locale
@@ -77,9 +79,11 @@ class AndroidPlatform(private val context: Context, private val catalog: CameraC
             config.setLocale(LocaleList.getDefault()[0])
         }
         context.createConfigurationContext(config)
-        // Recreate activity to apply new locale
+        // Recreate activity to apply new locale (must be on main thread)
         if (context is android.app.Activity) {
-            (context as android.app.Activity).recreate()
+            Handler(Looper.getMainLooper()).post {
+                (context as android.app.Activity).recreate()
+            }
         }
     }
 }
