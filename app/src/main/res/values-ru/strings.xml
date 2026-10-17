@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App -->
     <string name="app_name">Камера наблюдения</string>
     <string name="channel_service">Работа камеры</string>
     <string name="channel_alerts">Запуск камеры</string>
@@ -7,4 +8,187 @@
     <string name="notif_stop">Остановить</string>
     <string name="notif_boot_title">Камера наблюдения не запущена</string>
     <string name="notif_boot_text">Нажмите, чтобы снова включить камеру</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_advanced">Расширенные</string>
+    <string name="settings_cancel">Отмена</string>
+    <string name="settings_save">Сохранить</string>
+    <string name="settings_remove">Убрать</string>
+    <string name="settings_not_set">не задан</string>
+    <string name="settings_auto">Авто</string>
+    <string name="settings_new_value">Новое значение</string>
+    <string name="settings_find">Найти</string>
+
+    <!-- Group titles -->
+    <string name="group_video">Видео</string>
+    <string name="group_camera">Камера</string>
+    <string name="group_osd">Надписи на видео</string>
+    <string name="group_motion">Детектор движения</string>
+    <string name="group_record">Запись</string>
+    <string name="group_audio">Звук</string>
+    <string name="group_notify">Уведомления в Telegram</string>
+    <string name="group_network">Доступ</string>
+    <string name="group_system">Система</string>
+
+    <!-- Video settings -->
+    <string name="setting_resolution">Разрешение</string>
+    <string name="setting_fps">Частота кадров</string>
+    <string name="setting_bitrate">Битрейт</string>
+    <string name="setting_bitrate_help">Больше — качественнее картинка, но больше трафик и объём записей</string>
+    <string name="setting_orientation">Ориентация</string>
+    <string name="setting_orientation_help">Как закреплён телефон</string>
+    <string name="setting_mirror">Зеркально отразить</string>
+    <string name="setting_low_light_fps">Снижать частоту кадров в темноте</string>
+    <string name="setting_low_light_fps_help">Камера сможет удлинять выдержку: в темноте картинка ярче, но кадров меньше</string>
+    <string name="setting_bitrate_mode">Режим битрейта</string>
+    <string name="setting_keyframe_sec">Интервал ключевых кадров</string>
+    <string name="setting_keyframe_sec_help">Меньше — быстрее старт просмотра, больше — экономнее поток</string>
+    <string name="setting_profile">Профиль H.264</string>
+
+    <!-- Camera settings -->
+    <string name="setting_camera_id">Камера</string>
+    <string name="setting_focus">Фокус</string>
+    <string name="setting_exposure">Экспокоррекция</string>
+    <string name="setting_zoom">Зум</string>
+    <string name="setting_torch">Фонарик</string>
+    <string name="setting_torch_help">Подсветка вспышкой телефона</string>
+    <string name="setting_antibanding">Подавление мерцания ламп</string>
+    <string name="setting_awb">Баланс белого</string>
+    <string name="setting_stabilization">Стабилизация</string>
+    <string name="setting_stabilization_help">Немного обрезает кадр</string>
+
+    <!-- OSD settings -->
+    <string name="setting_osd_time">Дата и время</string>
+    <string name="setting_osd_name">Название камеры</string>
+    <string name="setting_osd_position">Положение</string>
+    <string name="setting_osd_size">Размер текста</string>
+
+    <!-- Motion settings -->
+    <string name="setting_motion_enabled">Детектор движения</string>
+    <string name="setting_motion_sensitivity">Чувствительность</string>
+    <string name="setting_motion_sensitivity_help">Выше — реагирует на более слабые изменения картинки</string>
+    <string name="setting_motion_min_area">Минимальная площадь</string>
+    <string name="setting_motion_min_area_help">Какая доля кадра должна измениться, чтобы считать это движением</string>
+    <string name="setting_motion_zones">Зоны детекции</string>
+    <string name="setting_motion_zones_help">Области кадра, в которых движение игнорируется</string>
+    <string name="setting_motion_ignore_light">Игнорировать смену освещения</string>
+    <string name="setting_motion_ignore_light_help">Включение света или облако не будут считаться движением</string>
+    <string name="setting_motion_fps">Частота анализа</string>
+
+    <!-- Recording settings -->
+    <string name="setting_rec_mode">Режим записи</string>
+    <string name="setting_rec_pre_sec">Запись до события</string>
+    <string name="setting_rec_post_sec">Запись после события</string>
+    <string name="setting_rec_max_clip_min">Макс. длина файла</string>
+    <string name="setting_rec_storage">Хранилище</string>
+    <string name="setting_rec_min_free_gb">Оставлять свободным</string>
+    <string name="setting_rec_min_free_gb_help">При нехватке места удаляются самые старые записи</string>
+    <string name="setting_rec_max_usage_gb">Макс. объём записей</string>
+    <string name="setting_rec_max_usage_gb_help">0 — без ограничения</string>
+    <string name="setting_rec_max_age_days">Хранить записи</string>
+    <string name="setting_rec_max_age_days_help">0 — без ограничения</string>
+
+    <!-- Audio settings -->
+    <string name="setting_audio_enabled">Звук с микрофона</string>
+    <string name="setting_audio_enabled_help">Добавляет звук в трансляцию и записи. Нужно разрешение на микрофон</string>
+    <string name="setting_audio_gain">Усиление</string>
+    <string name="setting_audio_gain_help">Для тихих помещений</string>
+
+    <!-- Telegram settings -->
+    <string name="setting_tg_enabled">Присылать уведомления</string>
+    <string name="setting_tg_enabled_help">Нужен интернет на телефоне и свой бот: создайте его у @BotFather и вставьте токен</string>
+    <string name="setting_tg_token">Токен бота</string>
+    <string name="setting_tg_chat">ID чата</string>
+    <string name="setting_tg_chat_help">Напишите боту любое сообщение и нажмите «Найти»</string>
+    <string name="setting_tg_photo">Снимок при движении</string>
+    <string name="setting_tg_video">Видео записи после окончания</string>
+    <string name="setting_tg_video_help">Ролики до 45 МБ</string>
+    <string name="setting_tg_power">Отключение зарядки и ошибки камеры</string>
+    <string name="setting_tg_cooldown_min">Не чаще одного раза в</string>
+    <string name="setting_tg_cooldown_min_help">О движении; 0 — без ограничения</string>
+    <string name="tg_no_chats">Чатов нет: напишите боту любое сообщение и повторите</string>
+    <string name="tg_find_error">Ошибка поиска чатов</string>
+
+    <!-- Network settings -->
+    <string name="setting_port">Порт веб-сервера</string>
+    <string name="setting_rtsp_enabled">RTSP-сервер</string>
+    <string name="setting_rtsp_enabled_help">Поток rtsp://&lt;адрес&gt;:8554/live для видеорегистраторов, VLC, Home Assistant</string>
+    <string name="setting_rtsp_port">Порт RTSP</string>
+    <string name="setting_username">Имя пользователя</string>
+    <string name="setting_password">Пароль</string>
+    <string name="setting_password_help">Пусто — вход без пароля</string>
+    <string name="password_dialog_title">Пароль для веб-доступа</string>
+    <string name="password_dialog_text">Браузер будет спрашивать имя пользователя и этот пароль. Без пароля камеру может открыть любой в вашей сети.</string>
+    <string name="token_dialog_text">Создайте бота у @BotFather в Telegram и вставьте выданный токен.</string>
+
+    <!-- System settings -->
+    <string name="setting_name">Название камеры</string>
+    <string name="setting_autostart">Автозапуск после перезагрузки</string>
+    <string name="setting_autostart_help">Требует разрешения «Поверх других приложений»</string>
+    <string name="setting_language">Язык интерфейса</string>
+    <string name="setting_language_help">Язык приложения и веб-интерфейса</string>
+
+    <!-- Option labels -->
+    <string name="opt_auto">Авто</string>
+    <string name="opt_landscape">Альбомная</string>
+    <string name="opt_landscape_flip">Альбомная, перевёрнутая</string>
+    <string name="opt_portrait">Портретная</string>
+    <string name="opt_portrait_flip">Портретная, перевёрнутая</string>
+    <string name="opt_continuous">Непрерывный</string>
+    <string name="opt_continuous_af">Непрерывный автофокус</string>
+    <string name="opt_infinity">Бесконечность</string>
+    <string name="opt_daylight">Дневной свет</string>
+    <string name="opt_cloudy">Облачно</string>
+    <string name="opt_incandescent">Лампы накаливания</string>
+    <string name="opt_fluorescent">Люминесцентные лампы</string>
+    <string name="opt_50hz">50 Гц</string>
+    <string name="opt_60hz">60 Гц</string>
+    <string name="opt_off">Выкл</string>
+    <string name="opt_high">High</string>
+    <string name="opt_main">Main</string>
+    <string name="opt_baseline">Baseline</string>
+    <string name="opt_vbr">Переменный (VBR)</string>
+    <string name="opt_cbr">Постоянный (CBR)</string>
+    <string name="opt_internal">Память телефона</string>
+    <string name="opt_tl">Сверху слева</string>
+    <string name="opt_tr">Сверху справа</string>
+    <string name="opt_bl">Снизу слева</string>
+    <string name="opt_br">Снизу справа</string>
+    <string name="opt_motion">По движению</string>
+
+    <!-- Units -->
+    <string name="unit_fps">к/с</string>
+    <string name="unit_kbps">кбит/с</string>
+    <string name="unit_seconds">с</string>
+    <string name="unit_minutes">мин</string>
+    <string name="unit_gb">ГБ</string>
+    <string name="unit_days">дн.</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_db">дБ</string>
+    <string name="unit_x">×</string>
+    <string name="unit_ev">EV</string>
+
+    <!-- Main screen -->
+    <string name="main_camera">Камера</string>
+    <string name="main_recordings">Записи</string>
+    <string name="main_events">События</string>
+    <string name="main_settings">Настройки</string>
+    <string name="main_running">Работает</string>
+    <string name="main_stopped">Остановлена</string>
+    <string name="main_starting">Запуск…</string>
+    <string name="main_error">Ошибка</string>
+    <string name="main_stop">Остановить</string>
+    <string name="main_start">Запустить</string>
+    <string name="main_snapshot">Снимок</string>
+    <string name="main_record">Записать</string>
+    <string name="main_flashlight">Фонарик</string>
+    <string name="main_sound">Звук</string>
+    <string name="main_fullscreen">На весь экран</string>
+    <string name="main_no_connection">Нет связи</string>
+    <string name="main_camera_off">Камера выключена</string>
+    <string name="main_recording">Запись</string>
+    <string name="main_motion">Движение</string>
+    <string name="main_events_empty">Пока ничего</string>
 </resources>

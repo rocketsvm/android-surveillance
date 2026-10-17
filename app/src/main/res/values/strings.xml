@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App -->
     <string name="app_name">Surveillance Camera</string>
     <string name="channel_service">Camera running</string>
     <string name="channel_alerts">Camera start</string>
@@ -7,4 +8,187 @@
     <string name="notif_stop">Stop</string>
     <string name="notif_boot_title">Surveillance Camera not running</string>
     <string name="notif_boot_text">Tap to restart the camera</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_cancel">Cancel</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_remove">Remove</string>
+    <string name="settings_not_set">not set</string>
+    <string name="settings_auto">Auto</string>
+    <string name="settings_new_value">New value</string>
+    <string name="settings_find">Find</string>
+
+    <!-- Group titles -->
+    <string name="group_video">Video</string>
+    <string name="group_camera">Camera</string>
+    <string name="group_osd">On-screen display</string>
+    <string name="group_motion">Motion detection</string>
+    <string name="group_record">Recording</string>
+    <string name="group_audio">Audio</string>
+    <string name="group_notify">Telegram notifications</string>
+    <string name="group_network">Access</string>
+    <string name="group_system">System</string>
+
+    <!-- Video settings -->
+    <string name="setting_resolution">Resolution</string>
+    <string name="setting_fps">Frame rate</string>
+    <string name="setting_bitrate">Bitrate</string>
+    <string name="setting_bitrate_help">Higher = better quality but more traffic and storage</string>
+    <string name="setting_orientation">Orientation</string>
+    <string name="setting_orientation_help">How the phone is mounted</string>
+    <string name="setting_mirror">Mirror</string>
+    <string name="setting_low_light_fps">Reduce frame rate in low light</string>
+    <string name="setting_low_light_fps_help">Camera can use longer exposure: brighter in low light but fewer frames</string>
+    <string name="setting_bitrate_mode">Bitrate mode</string>
+    <string name="setting_keyframe_sec">Keyframe interval</string>
+    <string name="setting_keyframe_sec_help">Lower = faster playback start, higher = more efficient stream</string>
+    <string name="setting_profile">H.264 profile</string>
+
+    <!-- Camera settings -->
+    <string name="setting_camera_id">Camera</string>
+    <string name="setting_focus">Focus</string>
+    <string name="setting_exposure">Exposure compensation</string>
+    <string name="setting_zoom">Zoom</string>
+    <string name="setting_torch">Flashlight</string>
+    <string name="setting_torch_help">Phone flash illumination</string>
+    <string name="setting_antibanding">Flicker reduction</string>
+    <string name="setting_awb">White balance</string>
+    <string name="setting_stabilization">Stabilization</string>
+    <string name="setting_stabilization_help">Crops the frame slightly</string>
+
+    <!-- OSD settings -->
+    <string name="setting_osd_time">Date and time</string>
+    <string name="setting_osd_name">Camera name</string>
+    <string name="setting_osd_position">Position</string>
+    <string name="setting_osd_size">Text size</string>
+
+    <!-- Motion settings -->
+    <string name="setting_motion_enabled">Motion detection</string>
+    <string name="setting_motion_sensitivity">Sensitivity</string>
+    <string name="setting_motion_sensitivity_help">Higher = reacts to weaker image changes</string>
+    <string name="setting_motion_min_area">Minimum area</string>
+    <string name="setting_motion_min_area_help">What fraction of the frame must change to count as motion</string>
+    <string name="setting_motion_zones">Detection zones</string>
+    <string name="setting_motion_zones_help">Frame areas where motion is ignored</string>
+    <string name="setting_motion_ignore_light">Ignore lighting changes</string>
+    <string name="setting_motion_ignore_light_help">Lights turning on or clouds won\'t trigger motion</string>
+    <string name="setting_motion_fps">Analysis rate</string>
+
+    <!-- Recording settings -->
+    <string name="setting_rec_mode">Recording mode</string>
+    <string name="setting_rec_pre_sec">Pre-event recording</string>
+    <string name="setting_rec_post_sec">Post-event recording</string>
+    <string name="setting_rec_max_clip_min">Max clip length</string>
+    <string name="setting_rec_storage">Storage</string>
+    <string name="setting_rec_min_free_gb">Keep free</string>
+    <string name="setting_rec_min_free_gb_help">Older recordings are deleted when space runs low</string>
+    <string name="setting_rec_max_usage_gb">Max storage used</string>
+    <string name="setting_rec_max_usage_gb_help">0 = unlimited</string>
+    <string name="setting_rec_max_age_days">Keep recordings for</string>
+    <string name="setting_rec_max_age_days_help">0 = unlimited</string>
+
+    <!-- Audio settings -->
+    <string name="setting_audio_enabled">Microphone audio</string>
+    <string name="setting_audio_enabled_help">Adds audio to stream and recordings. Requires microphone permission</string>
+    <string name="setting_audio_gain">Gain</string>
+    <string name="setting_audio_gain_help">For quiet rooms</string>
+
+    <!-- Telegram settings -->
+    <string name="setting_tg_enabled">Send notifications</string>
+    <string name="setting_tg_enabled_help">Requires internet on the phone and your own bot: create one at @BotFather and paste the token</string>
+    <string name="setting_tg_token">Bot token</string>
+    <string name="setting_tg_chat">Chat ID</string>
+    <string name="setting_tg_chat_help">Send your bot any message and click Find</string>
+    <string name="setting_tg_photo">Photo on motion</string>
+    <string name="setting_tg_video">Video after recording</string>
+    <string name="setting_tg_video_help">Clips up to 45 MB</string>
+    <string name="setting_tg_power">Power and camera errors</string>
+    <string name="setting_tg_cooldown_min">Max once every</string>
+    <string name="setting_tg_cooldown_min_help">For motion; 0 = unlimited</string>
+    <string name="tg_no_chats">No chats: send your bot any message and try again</string>
+    <string name="tg_find_error">Error finding chats</string>
+
+    <!-- Network settings -->
+    <string name="setting_port">Web server port</string>
+    <string name="setting_rtsp_enabled">RTSP server</string>
+    <string name="setting_rtsp_enabled_help">Stream rtsp://&lt;address&gt;:8554/live for NVRs, VLC, Home Assistant</string>
+    <string name="setting_rtsp_port">RTSP port</string>
+    <string name="setting_username">Username</string>
+    <string name="setting_password">Password</string>
+    <string name="setting_password_help">Empty = no password required</string>
+    <string name="password_dialog_title">Web access password</string>
+    <string name="password_dialog_text">The browser will ask for the username and this password. Without a password, anyone on your network can view the camera.</string>
+    <string name="token_dialog_text">Create a bot at @BotFather in Telegram and paste the token.</string>
+
+    <!-- System settings -->
+    <string name="setting_name">Camera name</string>
+    <string name="setting_autostart">Auto-start after reboot</string>
+    <string name="setting_autostart_help">Requires Display over other apps permission</string>
+    <string name="setting_language">UI language</string>
+    <string name="setting_language_help">Language of the app and web interface</string>
+
+    <!-- Option labels -->
+    <string name="opt_auto">Auto</string>
+    <string name="opt_landscape">Landscape</string>
+    <string name="opt_landscape_flip">Landscape (flipped)</string>
+    <string name="opt_portrait">Portrait</string>
+    <string name="opt_portrait_flip">Portrait (flipped)</string>
+    <string name="opt_continuous">Continuous</string>
+    <string name="opt_continuous_af">Continuous autofocus</string>
+    <string name="opt_infinity">Infinity</string>
+    <string name="opt_daylight">Daylight</string>
+    <string name="opt_cloudy">Cloudy</string>
+    <string name="opt_incandescent">Incandescent</string>
+    <string name="opt_fluorescent">Fluorescent</string>
+    <string name="opt_50hz">50 Hz</string>
+    <string name="opt_60hz">60 Hz</string>
+    <string name="opt_off">Off</string>
+    <string name="opt_high">High</string>
+    <string name="opt_main">Main</string>
+    <string name="opt_baseline">Baseline</string>
+    <string name="opt_vbr">Variable (VBR)</string>
+    <string name="opt_cbr">Constant (CBR)</string>
+    <string name="opt_internal">Phone storage</string>
+    <string name="opt_tl">Top left</string>
+    <string name="opt_tr">Top right</string>
+    <string name="opt_bl">Bottom left</string>
+    <string name="opt_br">Bottom right</string>
+    <string name="opt_motion">On motion</string>
+
+    <!-- Units -->
+    <string name="unit_fps">fps</string>
+    <string name="unit_kbps">kbps</string>
+    <string name="unit_seconds">s</string>
+    <string name="unit_minutes">min</string>
+    <string name="unit_gb">GB</string>
+    <string name="unit_days">days</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_db">dB</string>
+    <string name="unit_x">×</string>
+    <string name="unit_ev">EV</string>
+
+    <!-- Main screen -->
+    <string name="main_camera">Camera</string>
+    <string name="main_recordings">Recordings</string>
+    <string name="main_events">Events</string>
+    <string name="main_settings">Settings</string>
+    <string name="main_running">Running</string>
+    <string name="main_stopped">Stopped</string>
+    <string name="main_starting">Starting…</string>
+    <string name="main_error">Error</string>
+    <string name="main_stop">Stop</string>
+    <string name="main_start">Start</string>
+    <string name="main_snapshot">Snapshot</string>
+    <string name="main_record">Record</string>
+    <string name="main_flashlight">Flashlight</string>
+    <string name="main_sound">Sound</string>
+    <string name="main_fullscreen">Fullscreen</string>
+    <string name="main_no_connection">No connection</string>
+    <string name="main_camera_off">Camera off</string>
+    <string name="main_recording">Recording</string>
+    <string name="main_motion">Motion</string>
+    <string name="main_events_empty">No events yet</string>
 </resources>
