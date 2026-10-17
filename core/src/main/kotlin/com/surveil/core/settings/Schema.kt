@@ -319,7 +319,7 @@ object Schema {
             TextSetting(Keys.PASSWORD, "Пароль", "", maxLength = 64, secret = true, help = "Пусто — вход без пароля"),
         )),
         SettingGroup("system", "Система", listOf(
-            TextSetting(Keys.NAME, "Название камеры", "Камера", maxLength = 40),
+            TextSetting(Keys.NAME, "Название камеры", "Camera", maxLength = 40),
             ChoiceSetting(Keys.LANGUAGE, "Язык интерфейса", "auto", listOf(
                 Option("auto", "Как в системе"),
                 Option("en", "English"),
