@@ -50,6 +50,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.surveil.camera.R
+import com.surveil.camera.platform.AndroidPlatform
 import com.surveil.core.settings.BoolSetting
 import com.surveil.core.settings.ChoiceSetting
 import com.surveil.core.settings.FloatSetting
@@ -64,6 +65,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.math.roundToInt
 import androidx.compose.runtime.rememberCoroutineScope
+import com.surveil.camera.App
 
 /** Phone-side settings, rendered from the same schema as the web UI. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -501,6 +503,10 @@ private fun TelegramChatRow(def: TextSetting, current: String, title: @Composabl
 private fun save(key: String, value: Any) {
     kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
         com.surveil.camera.App.settings.set(key, value)
+        if (key == com.surveil.core.settings.Keys.LANGUAGE) {
+            val platform = AndroidPlatform(com.surveil.camera.App.instance, com.surveil.camera.capture.CameraCatalog(com.surveil.camera.App.instance))
+            platform.setLocale(value.toString())
+        }
     }
 }
 

@@ -232,4 +232,5 @@
     <string name="main_stop_camera">Остановить камеру</string>
     <string name="main_start_camera">Запустить камеру</string>
     <string name="main_dim_hint">Камера работает. Коснитесь экрана, чтобы выйти.</string>
+    <string name="main_vlc_header">Для VLC и видеорегистраторов:</string>
 </resources>

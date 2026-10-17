@@ -34,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +61,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.surveil.camera.service.EngineHolder
+import com.surveil.camera.R
 import com.surveil.core.NetAddress
 
 /**
@@ -169,7 +171,7 @@ fun AddressList(addresses: List<NetAddress>, port: Int, showVlc: Boolean = true,
         if (showVlc) {
             val host = v4.first().address
             val text = buildString {
-                append("Для VLC и видеорегистраторов:")
+                append(stringResource(R.string.main_vlc_header))
                 if (rtspPort != null) append("\nrtsp://$host:$rtspPort/live")
                 append("\nhttp://$host:$port/live.mp4")
             }

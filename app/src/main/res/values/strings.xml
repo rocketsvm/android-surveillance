@@ -232,4 +232,5 @@
     <string name="main_stop_camera">Stop camera</string>
     <string name="main_start_camera">Start camera</string>
     <string name="main_dim_hint">Camera is working. Tap the screen to exit.</string>
+    <string name="main_vlc_header">For VLC and DVRs:</string>
 </resources>
