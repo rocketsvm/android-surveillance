@@ -1,5 +1,127 @@
 'use strict';
 
+/* ================= localization ================= */
+const STRINGS = {
+  ru: {
+    app_title: 'Видеонаблюдение',
+    camera: 'Камера',
+    recordings: 'Записи',
+    events: 'События',
+    settings: 'Настройки',
+    login: 'Вход',
+    logout: 'Выход',
+    language: 'Язык',
+    camera_running: 'Камера работает',
+    camera_stopped: 'Камера остановлена',
+    camera_starting: 'Запуск камеры…',
+    camera_error: 'Ошибка камеры',
+    stop: 'Остановить',
+    start: 'Запустить',
+    snapshot: 'Снимок',
+    record: 'Запись',
+    flashlight: 'Фонарик',
+    sound: 'Звук',
+    motion_detected: 'Движение обнаружено',
+    recording_started: 'Запись начата',
+    recording_stopped: 'Запись остановлена',
+    no_recordings: 'Записей нет',
+    download: 'Скачать',
+    delete: 'Удалить',
+    play: 'Воспроизвести',
+    prev: 'Предыдущая',
+    next: 'Следующая',
+    earlier: 'Раньше',
+    later: 'Позже',
+    web_interface: 'Веб-интерфейс',
+    stream_for_vlc: 'Поток для VLC, видеорегистратора, Home Assistant',
+    copy: 'Копировать',
+    copied: 'Скопировано',
+    motion_zones: 'Зоны детекции движения',
+    login_title: 'Вход',
+    password: 'Пароль',
+    enter: 'Войти',
+    wrong_password: 'Неверный пароль',
+    chat: 'Чат',
+    send_test: 'Отправить тестовое сообщение',
+    test_sent: 'Отправлено — проверьте Telegram',
+  },
+  en: {
+    app_title: 'Surveillance',
+    camera: 'Camera',
+    recordings: 'Recordings',
+    events: 'Events',
+    settings: 'Settings',
+    login: 'Login',
+    logout: 'Logout',
+    language: 'Language',
+    camera_running: 'Camera running',
+    camera_stopped: 'Camera stopped',
+    camera_starting: 'Starting camera…',
+    camera_error: 'Camera error',
+    stop: 'Stop',
+    start: 'Start',
+    snapshot: 'Snapshot',
+    record: 'Record',
+    flashlight: 'Flashlight',
+    sound: 'Sound',
+    motion_detected: 'Motion detected',
+    recording_started: 'Recording started',
+    recording_stopped: 'Recording stopped',
+    no_recordings: 'No recordings',
+    download: 'Download',
+    delete: 'Delete',
+    play: 'Play',
+    prev: 'Previous',
+    next: 'Next',
+    earlier: 'Earlier',
+    later: 'Later',
+    web_interface: 'Web interface',
+    stream_for_vlc: 'Stream for VLC, NVR, Home Assistant',
+    copy: 'Copy',
+    copied: 'Copied',
+    motion_zones: 'Motion detection zones',
+    login_title: 'Login',
+    password: 'Password',
+    enter: 'Enter',
+    wrong_password: 'Wrong password',
+    chat: 'Chat',
+    send_test: 'Send test message',
+    test_sent: 'Sent — check Telegram',
+  },
+};
+
+function getLang() {
+  return localStorage.getItem('surveil_lang') || 'auto';
+}
+function setLang(lang) {
+  localStorage.setItem('surveil_lang', lang);
+  applyLang();
+}
+function resolveLang() {
+  const lang = getLang();
+  if (lang === 'auto') {
+    return navigator.language.startsWith('ru') ? 'ru' : 'en';
+  }
+  return lang;
+}
+function t(key) {
+  const lang = resolveLang();
+  return STRINGS[lang][key] || STRINGS.en[key] || key;
+}
+function applyLang() {
+  const lang = resolveLang();
+  document.documentElement.lang = lang;
+  // Update all elements with data-i18n attribute
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  // Update document title
+  if (status.name) {
+    document.title = status.name + ' — ' + t('app_title');
+  }
+}
+
 /* ================= helpers ================= */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -212,20 +334,20 @@ function updateStatus(st) {
   if (!st) return;
   S.status = st;
   if (st.tzOffsetMin != null) camTzMin = st.tzOffsetMin;
-  $('#cam-name').textContent = st.name || 'Камера';
-  document.title = (st.name || 'Камера') + ' — видеонаблюдение';
+  $('#cam-name').textContent = st.name || t('camera');
+  document.title = (st.name || t('camera')) + ' — ' + t('app_title');
   const cam = st.camera || {};
   if (cam.state === 'running') setLive('on', 'В эфире');
   else if (cam.state === 'error') setLive('err', 'Ошибка камеры');
   else if (cam.state === 'starting') setLive('', 'Запуск…');
-  else setLive('err', 'Камера выключена');
+  else setLive('err', t('camera_stopped'));
 
   const rec = st.recording || {};
   $('#pill-rec').hidden = !rec.active;
   const rb = $('#btn-record');
   rb.classList.toggle('rec-on', !!rec.manual);
   $('use', rb).setAttribute('href', rec.manual ? '#i-stop' : '#i-record');
-  $('span', rb).textContent = rec.manual ? 'Остановить' : 'Записать';
+  $('span', rb).textContent = rec.manual ? t('stop') : t('record');
 
   $('#st-res').textContent = cam.width ? `${cam.width}×${cam.height}` : '—';
   $('#st-fps').textContent = st.stream ? String(st.stream.fps).replace('.', ',') : '—';
@@ -489,8 +611,8 @@ function openRecording(id) {
     const next = h('button', { class: 'btn ghost', disabled: idx <= 0, title: 'Следующая' }, 'Позже', icon('right'));
     prev.onclick = () => { idx++; show(); };
     next.onclick = () => { idx--; show(); };
-    const dl = h('a', { class: 'btn', href: `/rec/${r.id}.mp4?download=1` }, icon('download'), 'Скачать');
-    const del = h('button', { class: 'btn danger' }, icon('trash'), 'Удалить');
+    const dl = h('a', { class: 'btn', href: `/rec/${r.id}.mp4?download=1` }, icon('download'), t('download'));
+    const del = h('button', { class: 'btn danger' }, icon('trash'), t('delete'));
     del.onclick = async () => {
       if (!confirm('Удалить эту запись?')) return;
       try {
@@ -586,11 +708,11 @@ async function saveSetting(key, value, fieldEl) {
     updateFromValues();
     if (fieldEl) { fieldEl.classList.add('saved'); setTimeout(() => fieldEl.classList.remove('saved'), 1500); }
     const def = findDef(key);
-    if (def && def.apply === 'pipeline' && r.changed.length) toast('Сохранено, камера перезапускается…');
+    if (def && def.apply === 'pipeline' && r.changed.length) toast('Saved, camera restarting…');
     else if (def && def.apply === 'server' && r.changed.length) {
       toast('Порт изменён, переход на новый адрес…');
       setTimeout(() => { location.port = String(value); }, 1500);
-    } else if (r.changed.length) toast('Сохранено');
+    } else if (r.changed.length) toast('Saved');
     return true;
   } catch (e) {
     toast('Не сохранено: ' + e.message, true);
@@ -609,19 +731,41 @@ function fmtValue(def, v) {
   return def.unit ? `${txt} ${def.unit}` : txt;
 }
 
+const GROUP_TITLES = {
+  ru: { video: 'Видео', camera: 'Камера', osd: 'Надписи на видео', motion: 'Детектор движения', record: 'Запись', audio: 'Звук', notify: 'Уведомления в Telegram', network: 'Доступ', system: 'Система' },
+  en: { video: 'Video', camera: 'Camera', osd: 'On-screen display', motion: 'Motion detection', record: 'Recording', audio: 'Audio', notify: 'Telegram notifications', network: 'Access', system: 'System' },
+};
+function groupTitle(id) {
+  const lang = resolveLang();
+  return GROUP_TITLES[lang][id] || GROUP_TITLES.en[id] || id;
+}
+
 function renderSettings() {
   const root = $('#settings-groups');
   root.textContent = '';
   root.classList.toggle('show-adv', $('#show-advanced').checked);
+
+  // Language selector card
+  const langCard = h('div', { class: 'card group' }, h('h2', { text: t('language') }));
+  const langSelect = h('select', { class: 'input', style: 'max-width:200px' });
+  for (const [code, label] of [['auto', 'Как в системе / System default'], ['en', 'English'], ['ru', 'Русский']]) {
+    const opt = h('option', { value: code, selected: getLang() === code });
+    opt.textContent = label;
+    langSelect.append(opt);
+  }
+  langSelect.onchange = () => { setLang(langSelect.value); renderSettings(); };
+  langCard.append(langSelect);
+  root.append(langCard);
+
   for (const g of S.groups || []) {
-    const card = h('div', { class: 'card group', 'data-group': g.id }, h('h2', { text: g.title }));
+    const card = h('div', { class: 'card group', 'data-group': g.id }, h('h2', { text: groupTitle(g.id) }));
     card.append(h('div', { class: 'group-notice', hidden: true }));
     for (const def of g.settings) card.append(renderField(def));
     if (g.id === 'notify') {
-      const test = h('button', { class: 'btn', type: 'button', style: 'margin-top:12px' }, 'Отправить тестовое сообщение');
+      const test = h('button', { class: 'btn', type: 'button', style: 'margin-top:12px' }, t('send_test'));
       test.onclick = async () => {
         test.disabled = true;
-        try { await api('/api/notify/test', { body: {} }); toast('Отправлено — проверьте Telegram'); }
+        try { await api('/api/notify/test', { body: {} }); toast(t('test_sent')); }
         catch (e) { toast(e.message, true); }
         test.disabled = false;
       };
@@ -971,13 +1115,14 @@ async function boot() {
     $('#settings-groups').classList.toggle('show-adv', e.target.checked);
   };
   window.addEventListener('hashchange', route);
+  applyLang();
   try {
     const s = await api('/api/session');
     if (s.tzOffsetMin != null) camTzMin = s.tzOffsetMin;
     if (s.name) $('#cam-name').textContent = s.name;
-    if (s.authRequired && !s.authorized) { $('#login-title').textContent = s.name || 'Вход'; showLogin(); return; }
+    if (s.authRequired && !s.authorized) { $('#login-title').textContent = s.name || t('login_title'); showLogin(); return; }
   } catch (e) {
-    stageMessage('Камера недоступна: ' + e.message, true);
+    stageMessage(t('camera') + ' unavailable: ' + e.message, true);
   }
   start();
 }
