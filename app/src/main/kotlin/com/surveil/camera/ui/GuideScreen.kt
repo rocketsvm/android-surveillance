@@ -31,9 +31,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.surveil.camera.App
+import com.surveil.camera.R
 import com.surveil.camera.platform.DeviceInfo
 import com.surveil.core.settings.Keys
 
@@ -61,9 +63,9 @@ fun GuideScreen(state: GuideState, actions: GuideActions) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Настройка камеры") },
+                title = { Text(stringResource(R.string.guide_title)) },
                 navigationIcon = {
-                    actions.back?.let { IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад") } }
+                    actions.back?.let { IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.guide_back)) } }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
@@ -77,75 +79,60 @@ fun GuideScreen(state: GuideState, actions: GuideActions) {
             item {
                 SectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Телефон станет камерой наблюдения", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Видео H.264 в реальном времени, детектор движения и запись роликов. Смотреть, скачивать записи и менять " +
-                                "настройки можно из браузера на компьютере или другом телефоне. Экран можно выключить — камера продолжит работать.",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
+                        Text(stringResource(R.string.guide_welcome_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.guide_welcome_text), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
             item {
-                Step(1, "Разрешения", home.cameraGranted && state.notificationsGranted) {
-                    CheckLine("Камера", home.cameraGranted, "Разрешить", actions.requestCamera)
+                Step(1, stringResource(R.string.guide_step_permissions), home.cameraGranted && state.notificationsGranted) {
+                    CheckLine(stringResource(R.string.guide_camera_perm), home.cameraGranted, stringResource(R.string.guide_allow), actions.requestCamera)
                     if (Build.VERSION.SDK_INT >= 33) {
-                        CheckLine("Уведомления (значок работы в шторке)", state.notificationsGranted, "Разрешить", actions.requestNotifications)
+                        CheckLine(stringResource(R.string.guide_notify_perm), state.notificationsGranted, stringResource(R.string.guide_allow), actions.requestNotifications)
                     }
                 }
             }
             item {
-                Step(2, "Работа с выключенным экраном", !home.batteryOptimized) {
-                    CheckLine("Без ограничений батареи", !home.batteryOptimized, "Разрешить", actions.requestBattery)
+                Step(2, stringResource(R.string.guide_step_background), !home.batteryOptimized) {
+                    CheckLine(stringResource(R.string.guide_battery_perm), !home.batteryOptimized, stringResource(R.string.guide_allow), actions.requestBattery)
                     if (DeviceInfo.isSamsung) {
-                        Hint(
-                            "Samsung: «Настройки → Приложения → Камера наблюдения → Батарея» — выберите «Без ограничений». " +
-                                "В «Обслуживание устройства → Автооптимизация» отключите перезагрузку по расписанию — или включите автозапуск ниже.",
-                        )
-                        FilledTonalButton(onClick = actions.openAppSettings) { Text("Открыть настройки приложения") }
+                        Hint(stringResource(R.string.guide_samsung_hint))
+                        FilledTonalButton(onClick = actions.openAppSettings) { Text(stringResource(R.string.guide_open_settings)) }
                     } else if (DeviceInfo.isXiaomi) {
-                        Hint("Xiaomi: в настройках приложения включите «Автозапуск» и «Контроль активности: нет ограничений».")
-                        FilledTonalButton(onClick = actions.openAppSettings) { Text("Открыть настройки приложения") }
+                        Hint(stringResource(R.string.guide_xiaomi_hint))
+                        FilledTonalButton(onClick = actions.openAppSettings) { Text(stringResource(R.string.guide_open_settings)) }
                     } else if (DeviceInfo.isHuawei) {
-                        Hint("Huawei/Honor: «Запуск приложений» — переключите на ручное управление и разрешите работу в фоне.")
-                        FilledTonalButton(onClick = actions.openAppSettings) { Text("Открыть настройки приложения") }
+                        Hint(stringResource(R.string.guide_huawei_hint))
+                        FilledTonalButton(onClick = actions.openAppSettings) { Text(stringResource(R.string.guide_open_settings)) }
                     }
-                    Hint("Держите телефон на зарядке: камера и Wi-Fi работают постоянно.")
+                    Hint(stringResource(R.string.guide_charging_hint))
                 }
             }
             item {
-                Step(3, "Подключение с другого устройства", null) {
-                    Text(
-                        "1. Подключите этот телефон и компьютер (или другой телефон) к одной Wi-Fi сети.\n" +
-                            "2. Откройте в браузере адрес ниже — или отсканируйте QR-код.\n" +
-                            "3. Чтобы адрес не менялся, закрепите IP за телефоном в настройках роутера (резервирование DHCP).",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                Step(3, stringResource(R.string.guide_step_connect), null) {
+                    Text(stringResource(R.string.guide_connect_text), style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(6.dp))
                     val port = if (home.status.serverPort > 0) home.status.serverPort else home.settings.port
                     AddressList(home.addresses, port, rtspPort = home.settings.takeIf { it.bool(Keys.RTSP_ENABLED) }?.int(Keys.RTSP_PORT))
-                    Hint(
-                        "Доступ через интернет: установите VPN (например, Tailscale или ZeroTier) на этот телефон и на устройство, " +
-                            "с которого смотрите, — адрес VPN появится в списке. Не открывайте порт на роутере без пароля.",
-                    )
+                    Hint(stringResource(R.string.guide_internet_hint))
                 }
             }
             item {
                 val autostart = home.settings.bool(Keys.AUTOSTART)
-                Step(4, "Автозапуск после перезагрузки", if (autostart) state.overlayGranted else null) {
+                Step(4, stringResource(R.string.guide_step_autostart), if (autostart) state.overlayGranted else null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Запускать камеру после перезагрузки телефона", Modifier.weight(1f))
+                        Text(stringResource(R.string.guide_autostart_switch), Modifier.weight(1f))
                         Switch(checked = autostart, onCheckedChange = { App.settings.set(Keys.AUTOSTART, it) })
                     }
                     if (autostart) {
-                        CheckLine("Разрешение «Поверх других приложений»", state.overlayGranted, "Разрешить", actions.requestOverlay)
-                        Hint("Без него после перезагрузки появится уведомление — камеру можно будет включить одним нажатием. Блокировку экрана лучше отключить.")
+                        CheckLine(stringResource(R.string.guide_overlay_perm), state.overlayGranted, stringResource(R.string.guide_allow), actions.requestOverlay)
+                        Hint(stringResource(R.string.guide_overlay_hint))
                     }
                 }
             }
             item {
                 Button(onClick = actions.done, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-                    Text(if (home.running) "Готово" else "Готово, запустить камеру")
+                    Text(if (home.running) stringResource(R.string.guide_done) else stringResource(R.string.guide_done_start))
                 }
             }
         }

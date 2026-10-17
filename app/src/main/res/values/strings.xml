@@ -201,7 +201,7 @@
     <string name="main_starting_subtitle">Starting…</string>
     <string name="main_camera_stopped">Camera stopped</string>
     <string name="main_start_btn">Start</string>
-    <string name="main_preview_hidden">Preview hidden — camera is still working</string>
+    <string name="main_preview_hidden">Preview hidden - camera is still working</string>
     <string name="main_show">Show</string>
     <string name="main_retrying">Retrying automatically…</string>
     <string name="main_rec">REC</string>
@@ -228,7 +228,7 @@
     <string name="main_allow">Allow</string>
     <string name="main_battery_permission">Allow unrestricted battery usage</string>
     <string name="main_battery_permission_text">Otherwise the system may put the camera to sleep when the screen is off.</string>
-    <string name="main_camera_continues">The camera will keep working when the screen is off and after you leave the app — until you press "Stop". It\'s better to keep the phone plugged in.</string>
+    <string name="main_camera_continues">The camera will keep working when the screen is off and after you leave the app - until you press "Stop". It\'s better to keep the phone plugged in.</string>
     <string name="main_stop_camera">Stop camera</string>
     <string name="main_start_camera">Start camera</string>
     <string name="main_dim_hint">Camera is working. Tap the screen to exit.</string>
@@ -244,4 +244,32 @@
     <string name="camera_external">External camera</string>
     <string name="camera_auto">Auto</string>
     <string name="camera_auto_label">Auto (%s)</string>
+
+    <!-- Guide screen -->
+    <string name="guide_title">Camera Setup</string>
+    <string name="guide_back">Back</string>
+    <string name="guide_welcome_title">This phone will become a surveillance camera</string>
+    <string name="guide_welcome_text">Real-time H.264 video, motion detection, and video recording. Watch, download recordings, and change settings from a browser on your computer or another phone. You can turn off the screen - the camera will keep working.</string>
+    <string name="guide_step_permissions">Permissions</string>
+    <string name="guide_camera_perm">Camera</string>
+    <string name="guide_notify_perm">Notifications (status bar icon)</string>
+    <string name="guide_allow">Allow</string>
+    <string name="guide_step_background">Background operation</string>
+    <string name="guide_battery_perm">No battery restrictions</string>
+    <string name="guide_samsung_hint">Samsung: Settings > Apps > Surveillance Camera > Battery - select "Unrestricted". In "Device care > Auto optimize" disable scheduled restart - or enable autostart below.</string>
+    <string name="guide_xiaomi_hint">Xiaomi: In app settings, enable "Autostart" and "Activity controls: No restrictions".</string>
+    <string name="guide_huawei_hint">Huawei/Honor: "App launch" - switch to manual and allow background activity.</string>
+    <string name="guide_open_settings">Open app settings</string>
+    <string name="guide_charging_hint">Keep the phone plugged in: camera and Wi-Fi run continuously.</string>
+    <string name="guide_step_connect">Connect from another device</string>
+    <string name="guide_connect_text">1. Connect this phone and your computer (or another phone) to the same Wi-Fi network.
+2. Open the address below in a browser - or scan the QR code.
+3. To keep the address stable, reserve an IP for this phone in your router settings (DHCP reservation).</string>
+    <string name="guide_internet_hint">Internet access: install a VPN (e.g., Tailscale or ZeroTier) on this phone and the device you watch from - the VPN address will appear in the list. Do not open a port on your router without a password.</string>
+    <string name="guide_step_autostart">Autostart after reboot</string>
+    <string name="guide_autostart_switch">Start camera after phone reboot</string>
+    <string name="guide_overlay_perm">"Display over other apps" permission</string>
+    <string name="guide_overlay_hint">Without it, after reboot a notification will appear - you can start the camera with one tap. Better to disable screen lock.</string>
+    <string name="guide_done">Done</string>
+    <string name="guide_done_start">Done, start camera</string>
 </resources>
