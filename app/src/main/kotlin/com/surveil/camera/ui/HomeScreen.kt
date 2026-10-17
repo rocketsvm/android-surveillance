@@ -65,10 +65,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.surveil.camera.App
+import com.surveil.camera.R
 import com.surveil.core.EngineStatus
 import com.surveil.core.NetAddress
 import com.surveil.core.settings.Keys
@@ -110,8 +112,8 @@ fun HomeScreen(state: HomeState, actions: HomeActions) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = actions.openGuide) { Icon(Icons.AutoMirrored.Outlined.HelpOutline, "Как подключиться") }
-                    IconButton(onClick = actions.openSettings) { Icon(Icons.Filled.Settings, "Настройки") }
+                    IconButton(onClick = actions.openGuide) { Icon(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.main_how_to_connect)) }
+                    IconButton(onClick = actions.openSettings) { Icon(Icons.Filled.Settings, stringResource(R.string.main_settings_btn)) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
@@ -139,15 +141,16 @@ fun HomeScreen(state: HomeState, actions: HomeActions) {
     }
 }
 
+@Composable
 private fun subtitle(s: HomeState): String = when {
-    !s.running -> "Остановлена"
-    s.status.camera.state == "error" -> "Ошибка камеры"
-    s.status.camera.state == "starting" -> "Запуск камеры…"
+    !s.running -> stringResource(R.string.main_stopped_subtitle)
+    s.status.camera.state == "error" -> stringResource(R.string.main_camera_error)
+    s.status.camera.state == "starting" -> stringResource(R.string.main_camera_starting)
     s.status.camera.state == "running" -> buildString {
-        append("Работает")
-        if (s.status.viewers > 0) append(" · зрителей: ${s.status.viewers}")
+        append(stringResource(R.string.main_running_subtitle))
+        if (s.status.viewers > 0) append(" · ".plus(stringResource(R.string.main_viewers).format(s.status.viewers)))
     }
-    else -> "Запуск…"
+    else -> stringResource(R.string.main_starting_subtitle)
 }
 
 private fun LazyListScope.homeItems(state: HomeState, actions: HomeActions) {
@@ -172,12 +175,12 @@ private fun PreviewCard(state: HomeState, actions: HomeActions, modifier: Modifi
         when {
             !state.running -> FillBox {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Камера остановлена", color = Color.White)
+                    Text(stringResource(R.string.main_camera_stopped), color = Color.White)
                     Spacer(Modifier.height(10.dp))
                     if (state.cameraGranted) Button(onClick = actions.start) {
                         Icon(Icons.Filled.PlayArrow, null)
                         Spacer(Modifier.width(6.dp))
-                        Text("Запустить")
+                        Text(stringResource(R.string.main_start_btn))
                     }
                 }
             }
@@ -185,9 +188,9 @@ private fun PreviewCard(state: HomeState, actions: HomeActions, modifier: Modifi
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
                     Icon(Icons.Filled.VisibilityOff, null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(36.dp))
                     Spacer(Modifier.height(8.dp))
-                    Text("Превью скрыто — камера продолжает работать", color = Color.White.copy(alpha = 0.8f))
+                    Text(stringResource(R.string.main_preview_hidden), color = Color.White.copy(alpha = 0.8f))
                     Spacer(Modifier.height(10.dp))
-                    OutlinedButton(onClick = { previewOn = true }) { Text("Показать", color = Color.White) }
+                    OutlinedButton(onClick = { previewOn = true }) { Text(stringResource(R.string.main_show), color = Color.White) }
                 }
             }
             else -> {
@@ -198,8 +201,8 @@ private fun PreviewCard(state: HomeState, actions: HomeActions, modifier: Modifi
                         if (cam.state == "error") {
                             Icon(Icons.Filled.Warning, null, tint = Palette.Motion, modifier = Modifier.size(32.dp))
                             Spacer(Modifier.height(6.dp))
-                            Text(cam.error ?: "Ошибка камеры", color = Color.White)
-                            Text("Повторная попытка автоматически…", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                            Text(cam.error ?: stringResource(R.string.main_camera_error), color = Color.White)
+                            Text(stringResource(R.string.main_retrying), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                         } else {
                             CircularProgressIndicator(color = Color.White)
                         }
@@ -209,14 +212,14 @@ private fun PreviewCard(state: HomeState, actions: HomeActions, modifier: Modifi
         }
         if (state.running) {
             Row(Modifier.align(Alignment.BottomStart).padding(10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (state.status.recordingId != null) StatusChip("REC", Palette.Rec, solid = true)
-                if (state.status.motionActive) StatusChip("Движение", Palette.Motion, solid = true)
+                if (state.status.recordingId != null) StatusChip(stringResource(R.string.main_rec), Palette.Rec, solid = true)
+                if (state.status.motionActive) StatusChip(stringResource(R.string.main_motion_chip), Palette.Motion, solid = true)
             }
             if (previewOn) {
                 IconButton(
                     onClick = { previewOn = false },
                     modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).clip(RoundedCornerShape(50)).background(Color.Black.copy(alpha = 0.45f)),
-                ) { Icon(Icons.Filled.VisibilityOff, "Скрыть превью", tint = Color.White) }
+                ) { Icon(Icons.Filled.VisibilityOff, stringResource(R.string.main_hide_preview), tint = Color.White) }
             }
         }
     }
@@ -228,8 +231,12 @@ private fun ControlsCard(state: HomeState, actions: HomeActions) {
     val s = state.settings
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            CardTitle("Запись")
-            val modes = listOf("off" to "Выкл", "motion" to "Движение", "continuous" to "Всегда")
+            CardTitle(stringResource(R.string.main_recording_title))
+            val modes = listOf(
+                "off" to stringResource(R.string.main_off),
+                "motion" to stringResource(R.string.main_motion_mode),
+                "continuous" to stringResource(R.string.main_continuous)
+            )
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 modes.forEachIndexed { i, (value, label) ->
                     SegmentedButton(
@@ -250,24 +257,24 @@ private fun ControlsCard(state: HomeState, actions: HomeActions) {
                 ) {
                     Icon(if (manual) Icons.Filled.Stop else Icons.Filled.FiberManualRecord, null, tint = if (manual) Color.White else Palette.Rec)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (manual) "Остановить запись" else "Записать сейчас", maxLines = 1, softWrap = false)
+                    Text(if (manual) stringResource(R.string.main_stop_recording) else stringResource(R.string.main_record_now), maxLines = 1, softWrap = false)
                 }
                 val torch = s.bool(Keys.TORCH)
                 FilledTonalButton(onClick = { App.settings.set(Keys.TORCH, !torch) }) {
                     Icon(if (torch) Icons.Filled.FlashlightOn else Icons.Filled.FlashlightOff, null)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (torch) "Фонарик вкл" else "Фонарик", maxLines = 1, softWrap = false)
+                    Text(if (torch) stringResource(R.string.main_flashlight_on) else stringResource(R.string.main_flashlight_btn), maxLines = 1, softWrap = false)
                 }
                 FilledTonalButton(onClick = actions.dimScreen) {
                     Icon(Icons.Filled.Bedtime, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("Погасить экран", maxLines = 1, softWrap = false)
+                    Text(stringResource(R.string.main_dim_screen), maxLines = 1, softWrap = false)
                 }
             }
             val motionText = when {
-                !s.bool(Keys.MOTION_ENABLED) -> "Детектор движения выключен"
-                state.status.motionActive -> "Обнаружено движение"
-                else -> "Движения нет (уровень %.1f%%, порог %.1f%%)".format(state.status.motionScore, s.double(Keys.MOTION_MIN_AREA))
+                !s.bool(Keys.MOTION_ENABLED) -> stringResource(R.string.main_motion_disabled)
+                state.status.motionActive -> stringResource(R.string.main_motion_detected)
+                else -> stringResource(R.string.main_no_motion).format(state.status.motionScore, s.double(Keys.MOTION_MIN_AREA))
             }
             Text(motionText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -280,9 +287,9 @@ private fun ConnectCard(state: HomeState) {
     val port = if (state.status.serverPort > 0) state.status.serverPort else state.settings.port
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            CardTitle("Как смотреть камеру")
+            CardTitle(stringResource(R.string.main_how_to_watch))
             Text(
-                "Откройте адрес в браузере на компьютере или другом телефоне в той же Wi-Fi сети. Там же — записи и все настройки.",
+                stringResource(R.string.main_open_address),
                 style = MaterialTheme.typography.bodyMedium,
             )
             AddressList(state.addresses, port, rtspPort = state.settings.takeIf { it.bool(Keys.RTSP_ENABLED) }?.int(Keys.RTSP_PORT))
@@ -290,14 +297,14 @@ private fun ConnectCard(state: HomeState) {
                 Text(state.status.serverError!!, color = MaterialTheme.colorScheme.error)
             }
             if (!state.running) {
-                Text("Адрес заработает после запуска камеры.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.main_address_will_work), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             } else {
                 OutlinedButton(onClick = {
                     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://127.0.0.1:$port/"))) }
                 }) {
                     Icon(Icons.Filled.OpenInBrowser, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("Открыть веб-интерфейс здесь")
+                    Text(stringResource(R.string.main_open_web))
                 }
             }
         }
@@ -308,9 +315,9 @@ private fun ConnectCard(state: HomeState) {
 private fun PermissionCard(actions: HomeActions) {
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Нужен доступ к камере", style = MaterialTheme.typography.titleMedium)
-            Text("Без него приложение не сможет показывать и записывать видео.", style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = actions.requestCamera) { Text("Разрешить") }
+            Text(stringResource(R.string.main_camera_permission), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.main_camera_permission_text), style = MaterialTheme.typography.bodyMedium)
+            Button(onClick = actions.requestCamera) { Text(stringResource(R.string.main_allow)) }
         }
     }
 }
@@ -322,14 +329,14 @@ private fun BatteryCard(actions: HomeActions) {
             Icon(Icons.Filled.Warning, null, tint = Palette.Motion)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Разрешите работу без ограничений", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.main_battery_permission), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "Иначе система может усыпить камеру при выключенном экране.",
+                    stringResource(R.string.main_battery_permission_text),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            TextButtonLike("Разрешить", actions.requestBattery)
+            TextButtonLike(stringResource(R.string.main_allow), actions.requestBattery)
         }
     }
 }
@@ -345,21 +352,20 @@ private fun ServiceCard(state: HomeState, actions: HomeActions) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (state.running) {
                 Text(
-                    "Камера продолжит работать при выключенном экране и после выхода из приложения — до нажатия «Остановить». " +
-                        "Телефон лучше держать на зарядке.",
+                    stringResource(R.string.main_camera_continues),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedButton(onClick = actions.stop, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.Stop, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("Остановить камеру")
+                    Text(stringResource(R.string.main_stop_camera))
                 }
             } else {
                 Button(onClick = actions.start, enabled = state.cameraGranted, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                     Icon(Icons.Filled.PlayArrow, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("Запустить камеру")
+                    Text(stringResource(R.string.main_start_camera))
                 }
             }
         }
@@ -385,7 +391,7 @@ fun DimOverlay(onExit: () -> Unit) {
         contentAlignment = Alignment.BottomCenter,
     ) {
         if (hint) Text(
-            "Камера работает. Коснитесь экрана, чтобы выйти.",
+            stringResource(R.string.main_dim_hint),
             color = Color.White.copy(alpha = 0.25f),
             modifier = Modifier.padding(32.dp),
             style = MaterialTheme.typography.bodySmall,
