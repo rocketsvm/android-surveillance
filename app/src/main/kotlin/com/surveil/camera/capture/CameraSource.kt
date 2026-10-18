@@ -30,6 +30,10 @@ data class CameraParams(
     /** auto | daylight | cloudy | incandescent | fluorescent */
     val awb: String = "auto",
     val stabilization: Boolean = false,
+    /** default | fast | high_quality | minimal | off */
+    val noiseReduction: String = "default",
+    /** default | fast | high_quality | off */
+    val edgeMode: String = "default",
 )
 
 /**
@@ -205,6 +209,22 @@ class CameraSource(
             val stab = if (p.stabilization) CameraMetadata.CONTROL_VIDEO_STABILIZATION_MODE_ON
             else CameraMetadata.CONTROL_VIDEO_STABILIZATION_MODE_OFF
             if (stab in cam.stabilizationModes) b.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, stab)
+            // Noise reduction and edge enhancement (HAL post-processing of the stream)
+            val nr = when (p.noiseReduction) {
+                "off" -> CameraMetadata.NOISE_REDUCTION_MODE_OFF
+                "fast" -> CameraMetadata.NOISE_REDUCTION_MODE_FAST
+                "high_quality" -> CameraMetadata.NOISE_REDUCTION_MODE_HIGH_QUALITY
+                "minimal" -> CameraMetadata.NOISE_REDUCTION_MODE_MINIMAL
+                else -> null // "default": leave the camera's own choice alone
+            }
+            if (nr != null && nr in cam.noiseReductionModes) b.set(CaptureRequest.NOISE_REDUCTION_MODE, nr)
+            val edge = when (p.edgeMode) {
+                "off" -> CameraMetadata.EDGE_MODE_OFF
+                "fast" -> CameraMetadata.EDGE_MODE_FAST
+                "high_quality" -> CameraMetadata.EDGE_MODE_HIGH_QUALITY
+                else -> null
+            }
+            if (edge != null && edge in cam.edgeModes) b.set(CaptureRequest.EDGE_MODE, edge)
 
             s.setRepeatingRequest(b.build(), null, handler)
             true

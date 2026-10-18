@@ -164,6 +164,7 @@ object Keys {
     const val ORIENTATION = "video.orientation"
     const val MIRROR = "video.mirror"
     const val LOW_LIGHT_FPS = "video.lowLightFps"
+    const val DENOISE = "video.denoise"
 
     const val FOCUS = "camera.focus"
     const val EXPOSURE = "camera.exposure"
@@ -172,6 +173,8 @@ object Keys {
     const val ANTIBANDING = "camera.antibanding"
     const val AWB = "camera.awb"
     const val STABILIZATION = "camera.stabilization"
+    const val NOISE_REDUCTION = "camera.noiseReduction"
+    const val EDGE_MODE = "camera.edgeMode"
 
     const val OSD_TIME = "osd.time"
     const val OSD_NAME = "osd.name"
@@ -239,6 +242,8 @@ object Schema {
             ChoiceSetting(Keys.PROFILE, "Профиль H.264", "auto", listOf(
                 Option("auto", "Авто"), Option("high", "High"), Option("main", "Main"), Option("baseline", "Baseline"),
             ), apply = Apply.PIPELINE, advanced = true),
+            IntSetting(Keys.DENOISE, "Сглаживание шума", 0, 0, 80, step = 10, unit = "%",
+                help = "Смешивает каждый кадр с предыдущим: шум в темноте меньше, битрейт нужен ниже. При больших значениях движущиеся объекты смазываются"),
         )),
         SettingGroup("camera", "Камера", listOf(
             ChoiceSetting(Keys.CAMERA_ID, "Камера", "", emptyList(), dynamic = true, apply = Apply.PIPELINE),
@@ -257,6 +262,19 @@ object Schema {
                 Option("incandescent", "Лампы накаливания"), Option("fluorescent", "Люминесцентные лампы"),
             ), advanced = true),
             BoolSetting(Keys.STABILIZATION, "Стабилизация", false, help = "Немного обрезает кадр", advanced = true),
+            ChoiceSetting(Keys.NOISE_REDUCTION, "Шумоподавление", "default", listOf(
+                Option("default", "Стандартное"),
+                Option("high_quality", "Качественное"),
+                Option("fast", "Быстрое"),
+                Option("minimal", "Минимальное"),
+                Option("off", "Выключено"),
+            ), help = "Обработка шума процессором камеры. «Стандартное» — как настроено камерой; поддерживаемые режимы зависят от камеры", advanced = true),
+            ChoiceSetting(Keys.EDGE_MODE, "Резкость", "default", listOf(
+                Option("default", "Стандартная"),
+                Option("high_quality", "Повышенная"),
+                Option("fast", "Быстрая"),
+                Option("off", "Выключена"),
+            ), help = "Повышение резкости поверх шума даёт «зернистость»: в темноте резкость можно выключить", advanced = true),
         )),
         SettingGroup("osd", "Надписи на видео", listOf(
             BoolSetting(Keys.OSD_TIME, "Дата и время", true),

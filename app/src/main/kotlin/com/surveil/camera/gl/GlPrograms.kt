@@ -17,6 +17,15 @@ internal class GlPrograms {
     /** Plain RGBA 2D texture with premultiplied alpha (overlay text). */
     val overlay = Program(VS_UV, FS_2D)
 
+    /** Processed frame (RGBA 2D texture), drawn as-is. */
+    val frame = Program(VS_UV, FS_2D)
+
+    /** Draws the previous frame over the current one with strength uMix (temporal denoise). */
+    val blend = Program(VS_UV, FS_2D_MIX)
+
+    /** 4×4 box-filtered luma of a processed frame texture, for downscaled motion analysis. */
+    val luma2d = Program(VS_UV, FS_2D_LUMA)
+
     private val quad: FloatBuffer = floatBuffer(
         // x, y, u, v
         -1f, -1f, 0f, 0f,
@@ -55,7 +64,7 @@ internal class GlPrograms {
     }
 
     fun release() {
-        camera.release(); luma.release(); overlay.release()
+        camera.release(); luma.release(); overlay.release(); frame.release(); blend.release(); luma2d.release()
     }
 
     class Program(vs: String, fs: String) {
@@ -64,6 +73,7 @@ internal class GlPrograms {
         val aUv = GLES20.glGetAttribLocation(id, "aUv")
         val uTex = GLES20.glGetUniformLocation(id, "uTex")
         val uStep = GLES20.glGetUniformLocation(id, "uStep")
+        val uMix = GLES20.glGetUniformLocation(id, "uMix")
         val sTex = GLES20.glGetUniformLocation(id, "sTex")
 
         fun use() = GLES20.glUseProgram(id)
@@ -188,6 +198,38 @@ uniform sampler2D sTex;
 varying vec2 vUv;
 void main() {
     gl_FragColor = texture2D(sTex, vUv);
+}
+"""
+
+        private const val FS_2D_MIX = """
+precision mediump float;
+uniform sampler2D sTex;
+uniform float uMix;
+varying vec2 vUv;
+void main() {
+    vec4 c = texture2D(sTex, vUv);
+    gl_FragColor = vec4(c.rgb, c.a * uMix);
+}
+"""
+
+        private const val FS_2D_LUMA = """
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform sampler2D sTex;
+uniform vec2 uStep;
+varying vec2 vUv;
+void main() {
+    vec3 acc = vec3(0.0);
+    for (int y = 0; y < 4; y++) {
+        for (int x = 0; x < 4; x++) {
+            acc += texture2D(sTex, vUv + (vec2(float(x), float(y)) - 1.5) * uStep).rgb;
+        }
+    }
+    float l = dot(acc * 0.0625, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(l, l, l, 1.0);
 }
 """
     }

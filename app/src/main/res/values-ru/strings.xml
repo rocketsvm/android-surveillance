@@ -58,6 +58,12 @@
     <string name="setting_awb">Баланс белого</string>
     <string name="setting_stabilization">Стабилизация</string>
     <string name="setting_stabilization_help">Немного обрезает кадр</string>
+    <string name="setting_noise_reduction">Шумоподавление</string>
+    <string name="setting_noise_reduction_help">Обработка шума процессором камеры. «Стандартное» — как настроено камерой; поддерживаемые режимы зависят от камеры</string>
+    <string name="setting_edge_mode">Резкость</string>
+    <string name="setting_edge_mode_help">Повышение резкости поверх шума даёт «зернистость»: в темноте резкость можно выключить</string>
+    <string name="setting_denoise">Сглаживание шума</string>
+    <string name="setting_denoise_help">Смешивает каждый кадр с предыдущим: шум в темноте меньше, битрейт нужен ниже. При больших значениях движущиеся объекты смазываются</string>
 
     <!-- OSD settings -->
     <string name="setting_osd_time">Дата и время</string>

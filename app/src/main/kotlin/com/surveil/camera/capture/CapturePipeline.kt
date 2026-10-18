@@ -153,6 +153,7 @@ class CapturePipeline(
             }
             if (changed.any { it in OVERLAY_KEYS }) r.renderer.setOverlay(overlay(s))
             if (Keys.MOTION_FPS in changed) r.renderer.setMotionIntervalMs(1000 / s.int(Keys.MOTION_FPS).coerceAtLeast(1))
+            if (Keys.DENOISE in changed) r.renderer.setDenoise(s.int(Keys.DENOISE))
         }
     }
 
@@ -234,7 +235,7 @@ class CapturePipeline(
             val renderer = GlRenderer(rendererCallbacks(gen))
             val cameraSurface = try {
                 renderer.start(
-                    GlRenderer.Config(camSize.width, camSize.height, cam.naturalPortrait, outW, outH, rotation, fps),
+                    GlRenderer.Config(camSize.width, camSize.height, cam.naturalPortrait, outW, outH, rotation, fps, s.int(Keys.DENOISE)),
                     encoder.inputSurface,
                 )
             } catch (e: Exception) {
@@ -354,6 +355,8 @@ class CapturePipeline(
         antibanding = s.string(Keys.ANTIBANDING),
         awb = s.string(Keys.AWB),
         stabilization = s.bool(Keys.STABILIZATION),
+        noiseReduction = s.string(Keys.NOISE_REDUCTION),
+        edgeMode = s.string(Keys.EDGE_MODE),
     )
 
     private fun overlay(s: Settings) = GlRenderer.Overlay(
@@ -370,6 +373,7 @@ class CapturePipeline(
         private const val MAX_RETRY_MS = 30_000L
         private val CAMERA_KEYS = setOf(
             Keys.FOCUS, Keys.EXPOSURE, Keys.ZOOM, Keys.TORCH, Keys.ANTIBANDING, Keys.AWB, Keys.STABILIZATION, Keys.LOW_LIGHT_FPS,
+            Keys.NOISE_REDUCTION, Keys.EDGE_MODE,
         )
         private val OVERLAY_KEYS = setOf(Keys.OSD_TIME, Keys.OSD_NAME, Keys.OSD_POSITION, Keys.OSD_SIZE, Keys.NAME, Keys.MIRROR)
     }

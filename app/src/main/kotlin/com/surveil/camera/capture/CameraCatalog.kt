@@ -35,6 +35,8 @@ class CameraInfo(
     val awbModes: IntArray,
     val antibandingModes: IntArray,
     val stabilizationModes: IntArray,
+    val noiseReductionModes: IntArray,
+    val edgeModes: IntArray,
     val hfovDeg: Float,
 ) {
     var label: String = id
@@ -128,6 +130,8 @@ class CameraCatalog(private val context: Context) {
             awbModes = ch.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES) ?: IntArray(0),
             antibandingModes = ch.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_ANTIBANDING_MODES) ?: IntArray(0),
             stabilizationModes = ch.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES) ?: IntArray(0),
+            noiseReductionModes = ch.get(CameraCharacteristics.NOISE_REDUCTION_AVAILABLE_NOISE_REDUCTION_MODES) ?: IntArray(0),
+            edgeModes = ch.get(CameraCharacteristics.EDGE_AVAILABLE_EDGE_MODES) ?: IntArray(0),
             hfovDeg = hfov,
         )
     }

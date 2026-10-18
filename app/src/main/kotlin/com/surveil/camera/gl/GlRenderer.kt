@@ -52,6 +52,8 @@ class GlRenderer(private val callbacks: Callbacks) {
         /** Extra rotation (degrees, counter-clockwise device rotation) applied to the natural image. */
         val rotation: Int,
         val fps: Int,
+        /** Temporal denoise strength: percent of the previous frame mixed in (0 = off). */
+        val denoise: Int = 0,
     )
 
     data class Overlay(
@@ -93,6 +95,13 @@ class GlRenderer(private val callbacks: Callbacks) {
     private var lumaFbo: Fbo? = null
     private var lumaBuf: ByteBuffer? = null
 
+    /** Temporal denoise: ping-pong buffers holding the accumulated frame. */
+    private var denoiseMix = 0
+    private var denoiseA: Fbo? = null
+    private var denoiseB: Fbo? = null
+    /** Result of the newest denoise pass (null before the first complete pass). */
+    private var frameFbo: Fbo? = null
+
     private var osdTex = 0
     private var osdBitmap: Bitmap? = null
     private var osdKey = ""
@@ -130,6 +139,22 @@ class GlRenderer(private val callbacks: Callbacks) {
 
     fun setMotionIntervalMs(ms: Int) {
         handler.post { motionIntervalNs = ms * 1_000_000L }
+    }
+
+    /** Turns temporal denoise on/off live (percent of the previous frame, 0 = off). */
+    fun setDenoise(percent: Int) {
+        handler.post {
+            val p = percent.coerceIn(0, MAX_DENOISE)
+            if (p == denoiseMix) return@post
+            denoiseMix = p
+            frameFbo = null
+            if (p == 0) {
+                denoiseA?.release(); denoiseB?.release()
+                denoiseA = null; denoiseB = null
+            } else {
+                allocateDenoiseBuffers()
+            }
+        }
     }
 
     /** Attaches/detaches the on-screen preview. Blocks until done so a destroyed Surface is never used. */
@@ -203,6 +228,8 @@ class GlRenderer(private val callbacks: Callbacks) {
         }
         lumaFbo = Fbo(lw, lh)
         lumaBuf = ByteBuffer.allocateDirect(lw * lh * 4).order(ByteOrder.nativeOrder())
+        denoiseMix = config.denoise.coerceIn(0, MAX_DENOISE)
+        allocateDenoiseBuffers()
         userMatrixDirty = true
         firstFrame = true
         nextEncodeNs = 0
@@ -217,6 +244,9 @@ class GlRenderer(private val callbacks: Callbacks) {
         runCatching {
             e.makeCurrent(pbuffer!!)
             lumaFbo?.release()
+            denoiseA?.release(); denoiseB?.release()
+            denoiseA = null; denoiseB = null; frameFbo = null
+            denoiseMix = 0
             if (osdTex != 0) GLES20.glDeleteTextures(1, intArrayOf(osdTex), 0)
             if (oesTex != 0) GLES20.glDeleteTextures(1, intArrayOf(oesTex), 0)
             programs?.release()
@@ -259,6 +289,7 @@ class GlRenderer(private val callbacks: Callbacks) {
             Matrix.multiplyMM(texMatrix, 0, stMatrix, 0, userMatrix, 0)
             val now = System.currentTimeMillis()
             prepareOsd(c, now)
+            if (denoiseMix > 0) renderDenoised()
 
             // Encoder, rate-limited to the target fps (the camera may run faster).
             val interval = 1_000_000_000L / c.fps.coerceAtLeast(1)
@@ -267,7 +298,7 @@ class GlRenderer(private val callbacks: Callbacks) {
                 encoderSurface?.let { s ->
                     e.makeCurrent(s)
                     GLES20.glViewport(0, 0, c.outWidth, c.outHeight)
-                    drawCamera()
+                    drawFrame()
                     drawOsd(c.outWidth, c.outHeight)
                     e.setPresentationTime(s, ts)
                     e.swapBuffers(s)
@@ -287,7 +318,7 @@ class GlRenderer(private val callbacks: Callbacks) {
                     var vh = (pw / outAspect).toInt()
                     if (vh > ph) { vh = ph; vw = (ph * outAspect).toInt() }
                     GLES20.glViewport((pw - vw) / 2, (ph - vh) / 2, vw, vh)
-                    drawCamera()
+                    drawFrame()
                     drawOsd(vw, vh)
                     if (!e.swapBuffers(s)) {
                         e.releaseSurface(s)
@@ -346,6 +377,63 @@ class GlRenderer(private val callbacks: Callbacks) {
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTex)
         GLES20.glUniform1i(p.sTex, 0)
         GLES20.glUniformMatrix4fv(p.uTex, 1, false, texMatrix, 0)
+        programs!!.drawFullQuad(p)
+    }
+
+    // ---- temporal denoise ----
+
+    private fun allocateDenoiseBuffers() {
+        val c = cfg ?: return
+        if (denoiseMix == 0) return
+        if (denoiseA?.width == c.outWidth && denoiseA?.height == c.outHeight) return
+        denoiseA?.release(); denoiseB?.release()
+        denoiseA = Fbo(c.outWidth, c.outHeight)
+        denoiseB = Fbo(c.outWidth, c.outHeight)
+        frameFbo = null
+    }
+
+    /**
+     * Accumulates the current camera frame into [frameFbo]: draw the frame into the buffer that is
+     * not the previous result, then blend the previous result over it. Noise is averaged out over
+     * frames; moving objects pick up ghosting when the mix is high.
+     */
+    private fun renderDenoised() {
+        val a = denoiseA ?: return
+        val b = denoiseB ?: return
+        val c = cfg ?: return
+        val prev = frameFbo
+        val dst = if (prev === a) b else a
+        dst.bind()
+        GLES20.glViewport(0, 0, c.outWidth, c.outHeight)
+        drawCamera()
+        if (prev != null) {
+            val p = programs!!.blend
+            p.use()
+            GLES20.glEnable(GLES20.GL_BLEND)
+            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, prev.tex)
+            GLES20.glUniform1i(p.sTex, 0)
+            GLES20.glUniform1f(p.uMix, denoiseMix.toFloat() / 100f)
+            programs!!.drawFullQuad(p)
+            GLES20.glDisable(GLES20.GL_BLEND)
+        }
+        Fbo.unbind()
+        frameFbo = dst
+    }
+
+    /** The frame every consumer sees: the accumulated one while denoising, the camera frame otherwise. */
+    private fun drawFrame() {
+        val tex = frameFbo?.tex
+        if (tex == null) {
+            drawCamera()
+            return
+        }
+        val p = programs!!.frame
+        p.use()
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex)
+        GLES20.glUniform1i(p.sTex, 0)
         programs!!.drawFullQuad(p)
     }
 
@@ -420,14 +508,25 @@ class GlRenderer(private val callbacks: Callbacks) {
         val buf = lumaBuf ?: return
         fbo.bind()
         GLES20.glViewport(0, 0, fbo.width, fbo.height)
-        val p = programs!!.luma
-        p.use()
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTex)
-        GLES20.glUniform1i(p.sTex, 0)
-        GLES20.glUniformMatrix4fv(p.uTex, 1, false, texMatrix, 0)
-        GLES20.glUniform2f(p.uStep, 1f / fbo.width / 4f, 1f / fbo.height / 4f)
-        programs!!.drawFullQuad(p)
+        val tex = frameFbo?.tex
+        if (tex != null) {
+            val p = programs!!.luma2d
+            p.use()
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex)
+            GLES20.glUniform1i(p.sTex, 0)
+            GLES20.glUniform2f(p.uStep, 1f / fbo.width / 4f, 1f / fbo.height / 4f)
+            programs!!.drawFullQuad(p)
+        } else {
+            val p = programs!!.luma
+            p.use()
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTex)
+            GLES20.glUniform1i(p.sTex, 0)
+            GLES20.glUniformMatrix4fv(p.uTex, 1, false, texMatrix, 0)
+            GLES20.glUniform2f(p.uStep, 1f / fbo.width / 4f, 1f / fbo.height / 4f)
+            programs!!.drawFullQuad(p)
+        }
         buf.clear()
         GLES20.glReadPixels(0, 0, fbo.width, fbo.height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf)
         Fbo.unbind()
@@ -450,7 +549,7 @@ class GlRenderer(private val callbacks: Callbacks) {
         val fbo = Fbo(w, h)
         fbo.bind()
         GLES20.glViewport(0, 0, w, h)
-        drawCamera()
+        drawFrame()
         drawOsd(w, h)
         val buf = ByteBuffer.allocateDirect(w * h * 4).order(ByteOrder.nativeOrder())
         GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf)
@@ -502,5 +601,6 @@ class GlRenderer(private val callbacks: Callbacks) {
     companion object {
         private const val TAG = "GlRenderer"
         private const val TOLERANCE_NS = 4_000_000L
+        private const val MAX_DENOISE = 80
     }
 }

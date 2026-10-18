@@ -58,6 +58,12 @@
     <string name="setting_awb">White balance</string>
     <string name="setting_stabilization">Stabilization</string>
     <string name="setting_stabilization_help">Crops the frame slightly</string>
+    <string name="setting_noise_reduction">Noise reduction</string>
+    <string name="setting_noise_reduction_help">Noise processing by the camera processor. "Default" is what the camera itself chooses; supported modes depend on the camera</string>
+    <string name="setting_edge_mode">Sharpness</string>
+    <string name="setting_edge_mode_help">Sharpening over noise looks "grainy": in the dark it can be switched off</string>
+    <string name="setting_denoise">Noise smoothing</string>
+    <string name="setting_denoise_help">Mixes every frame with the previous one: less noise in the dark, and a lower bitrate is enough. High values smear moving objects</string>
 
     <!-- OSD settings -->
     <string name="setting_osd_time">Date and time</string>
