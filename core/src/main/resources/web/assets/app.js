@@ -378,7 +378,8 @@ function plural(n, forms) {
 }
 function fmtBytes(n) {
   if (n == null) return '—';
-  const u = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'];
+  const lang = resolveLang();
+  const u = lang === 'ru' ? ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'] : ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0;
   while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
   return (i === 0 ? n : n.toFixed(n < 10 ? 1 : 0)).toString().replace('.', ',') + ' ' + u[i];
@@ -391,9 +392,10 @@ function fmtDuration(ms) {
 }
 function fmtUptime(sec) {
   const d = Math.floor(sec / 86400), hh = Math.floor(sec % 86400 / 3600), mm = Math.floor(sec % 3600 / 60);
-  if (d) return `${d} д ${hh} ч`;
-  if (hh) return `${hh} ч ${mm} мин`;
-  return `${mm} мин`;
+  const lang = resolveLang();
+  if (d) return lang === 'ru' ? `${d} д ${hh} ч` : `${d}d ${hh}h`;
+  if (hh) return lang === 'ru' ? `${hh} ч ${mm} мин` : `${hh}h ${mm}m`;
+  return lang === 'ru' ? `${mm} мин` : `${mm}m`;
 }
 /* All times are shown in the camera's time zone, matching the date burned into the video. */
 let camTzMin = null;
@@ -408,11 +410,13 @@ function fmtDay(ms) {
   const d = camDate(ms), now = camDate(Date.now());
   const start = (x) => Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate());
   const diff = Math.round((start(now) - start(d)) / 86400000);
-  if (diff === 0) return 'Сегодня';
-  if (diff === 1) return 'Вчера';
+  const lang = resolveLang();
+  if (diff === 0) return lang === 'ru' ? 'Сегодня' : 'Today';
+  if (diff === 1) return lang === 'ru' ? 'Вчера' : 'Yesterday';
+  const locale = lang === 'ru' ? 'ru-RU' : 'en-US';
   const opts = { day: 'numeric', month: 'long', weekday: 'short', timeZone: 'UTC' };
   if (d.getUTCFullYear() !== now.getUTCFullYear()) opts.year = 'numeric';
-  return d.toLocaleDateString('ru-RU', opts);
+  return d.toLocaleDateString(locale, opts);
 }
 function fmtDateTime(ms) {
   return fmtDay(ms) + ', ' + fmtTime(ms);
@@ -571,7 +575,8 @@ function updateStatus(st) {
 
   $('#st-res').textContent = cam.width ? `${cam.width}×${cam.height}` : '—';
   $('#st-fps').textContent = st.stream ? String(st.stream.fps).replace('.', ',') : '—';
-  $('#st-kbps').textContent = st.stream ? st.stream.kbps + ' кбит/с' : '—';
+  const lang = resolveLang();
+  $('#st-kbps').textContent = st.stream ? `${st.stream.kbps} ${lang === 'ru' ? 'кбит/с' : 'kbps'}` : '—';
   $('#st-viewers').textContent = st.stream ? st.stream.viewers : '—';
   const d = st.device || {};
   $('#st-battery').textContent = d.battery != null ? d.battery + '%' + (d.charging ? ' ⚡' : '') : '—';
@@ -955,10 +960,14 @@ const SETTING_TITLES = {
   ru: {},
   en: {
     'video.bitrate': 'Bitrate',
-    'video.bitrate.mode': 'Bitrate mode',
+    'video.bitrateMode': 'Bitrate mode',
     'video.fps': 'Frame rate',
-    'video.keyframe.sec': 'Keyframe interval',
+    'video.keyframeSec': 'Keyframe interval',
     'video.resolution': 'Resolution',
+    'video.mirror': 'Mirror',
+    'video.orientation': 'Orientation',
+    'video.lowLightFps': 'Low-light FPS',
+    'video.profile': 'Camera profile',
     'camera.id': 'Camera',
     'camera.exposure': 'Exposure',
     'camera.focus': 'Focus',
@@ -966,11 +975,7 @@ const SETTING_TITLES = {
     'camera.torch': 'Flashlight',
     'camera.stabilization': 'Stabilization',
     'camera.zoom': 'Zoom',
-    'camera.mirror': 'Mirror',
     'camera.antibanding': 'Anti-flicker',
-    'camera.orientation': 'Orientation',
-    'camera.lowlight.fps': 'Low-light FPS',
-    'camera.profile': 'Camera profile',
     'osd.name': 'Show camera name',
     'osd.time': 'Show time',
     'osd.position': 'Overlay position',
@@ -991,9 +996,9 @@ const SETTING_TITLES = {
     'record.storage': 'Storage path',
     'audio.enabled': 'Audio',
     'audio.gain': 'Audio gain',
-    'notify.enabled': 'Telegram notifications',
-    'notify.token': 'Bot token',
-    'notify.chat': 'Chat ID',
+    'notify.telegram': 'Telegram notifications',
+    'notify.tgToken': 'Bot token',
+    'notify.tgChat': 'Chat ID',
     'notify.photo': 'Send photos',
     'notify.video': 'Send videos',
     'notify.cooldownMin': 'Cooldown',
@@ -1001,12 +1006,11 @@ const SETTING_TITLES = {
     'net.port': 'Port',
     'net.password': 'Password',
     'net.username': 'Username',
-    'net.rtsp.enabled': 'RTSP server',
-    'net.rtsp.port': 'RTSP port',
+    'net.rtsp': 'RTSP server',
+    'net.rtspPort': 'RTSP port',
     'sys.language': 'Language',
     'sys.autostart': 'Start on boot',
     'sys.name': 'Camera name',
-    'sys.overlay': 'Show overlay',
   },
 };
 
@@ -1014,10 +1018,14 @@ const SETTING_HELP = {
   ru: {},
   en: {
     'video.bitrate': 'Higher — better quality, but more traffic and storage',
-    'video.bitrate.mode': 'Constant bitrate (CBR) or variable (VBR)',
+    'video.bitrateMode': 'Constant bitrate (CBR) or variable (VBR)',
     'video.fps': 'Frames per second',
-    'video.keyframe.sec': 'Lower — faster playback start, higher — smaller stream',
+    'video.keyframeSec': 'Lower — faster playback start, higher — smaller stream',
     'video.resolution': 'Stream and recording resolution',
+    'video.mirror': 'Mirror the image',
+    'video.orientation': 'How the phone is mounted',
+    'video.lowLightFps': 'Camera can lengthen exposure: brighter in dark, but fewer frames',
+    'video.profile': 'Camera tuning profile',
     'camera.id': 'Which camera to use',
     'camera.exposure': 'Exposure compensation',
     'camera.focus': 'Focus mode',
@@ -1025,11 +1033,7 @@ const SETTING_HELP = {
     'camera.torch': 'Use phone flash for illumination',
     'camera.stabilization': 'Slightly crops the frame',
     'camera.zoom': 'Digital zoom',
-    'camera.mirror': 'Mirror the image',
     'camera.antibanding': 'Reduce flicker from artificial lighting',
-    'camera.orientation': 'How the phone is mounted',
-    'camera.lowlight.fps': 'Camera can lengthen exposure: brighter in dark, but fewer frames',
-    'camera.profile': 'Camera tuning profile',
     'osd.name': 'Show camera name on video',
     'osd.time': 'Show time on video',
     'osd.position': 'Position of overlay text',
@@ -1050,9 +1054,9 @@ const SETTING_HELP = {
     'record.storage': 'Directory for recordings',
     'audio.enabled': 'Add audio to stream and recordings. Requires microphone permission',
     'audio.gain': 'For quiet rooms',
-    'notify.enabled': 'Send notifications to Telegram',
-    'notify.token': 'Requires internet on phone and your own bot: create one with @BotFather and paste the token',
-    'notify.chat': 'Send your bot any message and press "Find"',
+    'notify.telegram': 'Send notifications to Telegram',
+    'notify.tgToken': 'Requires internet on phone and your own bot: create one with @BotFather and paste the token',
+    'notify.tgChat': 'Send your bot any message and press "Find"',
     'notify.photo': 'Send photos on motion',
     'notify.video': 'Videos up to 45 MB',
     'notify.cooldownMin': 'Between motion notifications; 0 — unlimited',
@@ -1060,12 +1064,11 @@ const SETTING_HELP = {
     'net.port': 'HTTP server port',
     'net.password': 'Empty — no password required',
     'net.username': 'Username for login',
-    'net.rtsp.enabled': 'RTSP stream for NVRs, VLC, Home Assistant',
-    'net.rtsp.port': 'RTSP server port',
+    'net.rtsp': 'RTSP stream for NVRs, VLC, Home Assistant',
+    'net.rtspPort': 'RTSP server port',
     'sys.language': 'App and web interface language',
     'sys.autostart': 'Start camera on phone boot',
     'sys.name': 'Name shown in web UI and notifications',
-    'sys.overlay': 'Requires "Display over other apps" permission',
   },
 };
 
@@ -1077,6 +1080,28 @@ function settingTitle(key) {
 function settingHelp(key) {
   const lang = resolveLang();
   return SETTING_HELP[lang][key] || SETTING_HELP.en[key] || null;
+}
+
+const CHOICE_LABELS = {
+  ru: {},
+  en: {
+    'record.mode': { off: 'Off', motion: 'On motion', continuous: 'Always' },
+    'record.storage': { internal: 'Phone storage' },
+    'video.orientation': { '0': 'Normal', '90': '90°', '180': '180°', '270': '270°' },
+    'video.bitrateMode': { cbr: 'CBR', vbr: 'VBR' },
+    'osd.position': { 'top-left': 'Top left', 'top-right': 'Top right', 'bottom-left': 'Bottom left', 'bottom-right': 'Bottom right' },
+    'video.profile': { auto: 'Auto', h264: 'H.264', h265: 'H.265' },
+    'camera.awb': { auto: 'Auto', daylight: 'Daylight', cloudy: 'Cloudy', incandescent: 'Incandescent', fluorescent: 'Fluorescent' },
+    'camera.focus': { auto: 'Auto', manual: 'Manual', infinity: 'Infinity' },
+    'camera.exposure': { auto: 'Auto' },
+  },
+};
+
+function translateChoiceLabel(key, value, originalLabel) {
+  const lang = resolveLang();
+  const map = CHOICE_LABELS[lang][key] || CHOICE_LABELS.en[key];
+  if (map && map[value] !== undefined) return map[value];
+  return originalLabel;
 }
 
 const GROUP_TITLES = {
@@ -1167,7 +1192,10 @@ function renderField(def) {
     const sel = h('select');
     const opts = def.options || [];
     if (!opts.some((o) => o.value === value)) sel.append(h('option', { value: value, text: value || t('auto') }));
-    for (const o of opts) sel.append(h('option', { value: o.value, text: o.label }));
+    for (const o of opts) {
+      const label = translateChoiceLabel(def.key, o.value, o.label);
+      sel.append(h('option', { value: o.value, text: label }));
+    }
     sel.value = value;
     sel.onchange = () => saveSetting(def.key, sel.value, field);
     row.append(h('div', { class: 'field-control' }, sel));
