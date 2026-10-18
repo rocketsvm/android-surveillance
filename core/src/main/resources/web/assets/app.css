@@ -315,6 +315,10 @@ input:focus-visible + .switch { outline: 2px solid var(--accent); outline-offset
   padding: 6px 10px; border-radius: 8px;
 }
 .addr .kind { color: var(--text-3); font-size: 13px; }
+.addr-qr {
+  width: 108px; height: 108px; flex: none; border-radius: 8px;
+  background: #fff; border: 1px solid var(--border); image-rendering: pixelated;
+}
 
 /* ---------- modal ---------- */
 .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; }

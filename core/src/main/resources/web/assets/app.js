@@ -158,6 +158,7 @@ const STRINGS = {
     clear_events_confirm: 'Очистить весь журнал событий?',
     events_cleared: 'Журнал событий очищен',
     latency_hint: 'Задержка трансляции',
+    qr_hint: 'Наведите камеру телефона, чтобы открыть веб-интерфейс',
   },
   en: {
     app_title: 'Surveillance',
@@ -315,6 +316,7 @@ const STRINGS = {
     clear_events_confirm: 'Clear the entire event log?',
     events_cleared: 'Event log cleared',
     latency_hint: 'Stream latency',
+    qr_hint: 'Point your phone camera here to open the web interface',
   },
 };
 
@@ -398,7 +400,7 @@ function fmtBytes(n) {
   const u = lang === 'ru' ? ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'] : ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0;
   while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
-  return (i === 0 ? n : n.toFixed(n < 10 ? 1 : 0)).toString().replace('.', ',') + ' ' + u[i];
+  return (i === 0 ? String(n) : fmtNum(n, n < 10 ? 1 : 0)) + ' ' + u[i];
 }
 function fmtDuration(ms) {
   const s = Math.max(0, Math.round(ms / 1000));
@@ -406,6 +408,12 @@ function fmtDuration(ms) {
   const p = (x) => String(x).padStart(2, '0');
   return hh ? `${hh}:${p(mm)}:${p(ss)}` : `${mm}:${p(ss)}`;
 }
+/** Number with the decimal separator of the current UI language. */
+function fmtNum(n, digits) {
+  const s = digits == null ? String(n) : Number(n).toFixed(digits);
+  return s.replace('.', resolveLang() === 'ru' ? ',' : '.');
+}
+
 const EVENT_STRINGS = {
   ru: {
     service_started: 'Сервис запущен',
@@ -652,13 +660,13 @@ function updateStatus(st) {
   $('span', rb).textContent = rec.manual ? t('stop') : t('record');
 
   $('#st-res').textContent = cam.width ? `${cam.width}×${cam.height}` : '—';
-  $('#st-fps').textContent = st.stream ? String(st.stream.fps).replace('.', ',') : '—';
+  $('#st-fps').textContent = st.stream ? fmtNum(st.stream.fps) : '—';
   const lang = resolveLang();
   $('#st-kbps').textContent = st.stream ? `${st.stream.kbps} ${lang === 'ru' ? 'кбит/с' : 'kbps'}` : '—';
   $('#st-viewers').textContent = st.stream ? st.stream.viewers : '—';
   const d = st.device || {};
   $('#st-battery').textContent = d.battery != null ? d.battery + '%' + (d.charging ? ' ⚡' : '') : '—';
-  $('#st-temp').textContent = d.tempC != null ? d.tempC.toFixed(1).replace('.', ',') + ' °C' : '—';
+  $('#st-temp').textContent = d.tempC != null ? fmtNum(d.tempC, 1) + ' °C' : '—';
   $('#st-temp').style.color = d.tempC >= 45 ? 'var(--danger)' : '';
   $('#st-free').textContent = st.storage ? fmtBytes(st.storage.freeBytes) : '—';
   $('#st-uptime').textContent = st.uptimeSec != null ? fmtUptime(st.uptimeSec) : '—';
@@ -684,7 +692,7 @@ function updateMotion(m) {
   if (m.enabled === false) { stateEl.textContent = t('motion_off'); stateEl.className = ''; }
   else if (m.active) { stateEl.textContent = t('motion_active'); stateEl.className = 'active'; }
   else { stateEl.textContent = t('motion_idle'); stateEl.className = ''; }
-  $('#motion-score').textContent = (m.score || 0).toFixed(1).replace('.', ',') + '%';
+  $('#motion-score').textContent = fmtNum(m.score || 0, 1) + '%';
   $('#pill-motion').hidden = !m.active;
   drawMotionBox(m.active ? m.box : null);
 }
@@ -754,7 +762,7 @@ function startPlayer() {
         if (now - lastBytesAt >= 2000) {
           lastBytes = bytes; lastBytesAt = now;
         }
-        $('#badge-lat').textContent = lag ? lag.toFixed(2).replace('.', resolveLang() === 'ru' ? ',' : '.') + (resolveLang() === 'ru' ? ' с' : ' s') : '—';
+        $('#badge-lat').textContent = lag ? fmtNum(lag, 2) + (resolveLang() === 'ru' ? ' с' : ' s') : '—';
       },
     });
   }
@@ -1044,7 +1052,7 @@ function findDef(key) {
 const UNITS_EN = { 'к/с': 'fps', 'кбит/с': 'kbps', 'с': 's', 'мин': 'min', 'ГБ': 'GB', 'дн.': 'd', 'дБ': 'dB', '×': '×', '%': '%', 'EV': 'EV' };
 function fmtValue(def, v) {
   const n = Number(v);
-  const txt = def.type === 'float' ? (Math.round(n * 100) / 100).toString().replace('.', ',') : String(n);
+  const txt = def.type === 'float' ? fmtNum(Math.round(n * 100) / 100) : String(n);
   if (!def.unit) return txt;
   const lang = resolveLang();
   const unit = lang === 'ru' ? def.unit : (UNITS_EN[def.unit] || def.unit);
@@ -1358,7 +1366,8 @@ function renderInfo() {
     const url = `http://${a.address}:${port}/`;
     const copy = h('button', { class: 'icon-btn', title: t('copy') }, icon('copy'));
     copy.onclick = () => copyText(url);
-    list.append(h('div', { class: 'addr' }, h('code', { text: url }), copy, h('span', { class: 'kind', text: `${kinds[a.kind] || a.kind} · ${a.iface}` })));
+    const qr = h('img', { class: 'addr-qr', src: `/api/qr?addr=${encodeURIComponent(a.address)}`, alt: 'QR', title: t('qr_hint'), loading: 'lazy' });
+    list.append(h('div', { class: 'addr' }, qr, h('code', { text: url }), copy, h('span', { class: 'kind', text: `${kinds[a.kind] || a.kind} · ${a.iface}` })));
   }
   card.append(h('div', { class: 'card-title', text: t('web_interface') }), list);
   const host = (st.network || []).find((x) => !x.ipv6);

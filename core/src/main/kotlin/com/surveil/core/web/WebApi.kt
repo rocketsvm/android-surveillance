@@ -133,6 +133,17 @@ class WebApi(private val engine: CoreEngine) {
             json(buildJsonObject { put("cleared", engine.events.clear()) })
         }
 
+        // QR of the web UI address. The address must be one of this device's own interfaces, so the
+        // endpoint cannot be used to render an arbitrary URL.
+        get("/api/qr") { req ->
+            val addr = req.query["addr"]?.trim() ?: ""
+            val known = engine.platform.networkAddresses().any { it.address == addr && !it.ipv6 }
+            if (!known) return@get HttpResponse.error(400, "unknown address")
+            val url = "http://$addr:${engine.serverPort}/"
+            runCatching { HttpResponse.Bytes(200, "image/png", Qr.png(url)) }
+                .getOrElse { HttpResponse.error(500, "QR failed: ${it.message}") }
+        }
+
         get("/ws/live") { HttpResponse.WebSocketUpgrade { ws -> engine.live.serveWebSocket(ws) } }
         get("/ws/events") {
             HttpResponse.WebSocketUpgrade { ws ->
