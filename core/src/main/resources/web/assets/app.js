@@ -155,6 +155,8 @@ const STRINGS = {
     advanced: 'Дополнительные',
     username: 'Имя пользователя',
     free: 'свободно',
+    clear_events_confirm: 'Очистить весь журнал событий?',
+    events_cleared: 'Журнал событий очищен',
   },
   en: {
     app_title: 'Surveillance',
@@ -309,6 +311,8 @@ const STRINGS = {
     advanced: 'Advanced',
     username: 'Username',
     free: 'free',
+    clear_events_confirm: 'Clear the entire event log?',
+    events_cleared: 'Event log cleared',
   },
 };
 
@@ -396,6 +400,53 @@ function fmtDuration(ms) {
   const p = (x) => String(x).padStart(2, '0');
   return hh ? `${hh}:${p(mm)}:${p(ss)}` : `${mm}:${p(ss)}`;
 }
+const EVENT_STRINGS = {
+  ru: {
+    service_started: 'Сервис запущен',
+    service_stopped: 'Сервис остановлен',
+    camera_error: 'Ошибка камеры: {error}',
+    camera_running: 'Камера работает: {w}×{h}, {fps} к/с',
+    stream_stalled: 'Видеопоток остановился — перезапуск камеры',
+    manual_rec_on: 'Ручная запись включена',
+    manual_rec_off: 'Ручная запись выключена',
+    motion_started: 'Обнаружено движение',
+    motion_ended: 'Движение закончилось: {sec} с, пик {peak}%',
+    recording_started: 'Начата запись ({trigger})',
+    recording_saved: 'Запись сохранена: {sec} с, {mb} МБ',
+    record_error: 'Ошибка записи: {error}',
+    recordings_deleted: 'Удалено записей: {n}',
+    settings_changed: 'Изменены настройки: {keys}',
+    login_failed: 'Неудачная попытка входа с {ip}',
+    power_disconnected: 'Зарядка отключена{batt}',
+    power_connected: 'Зарядка подключена{batt}',
+    battery_low: 'Батарея разряжается{batt}',
+    battery_okay: 'Заряд батареи восстановлен{batt}',
+    battery_suffix: ' (батарея {pct}%)',
+  },
+  en: {
+    service_started: 'Service started',
+    service_stopped: 'Service stopped',
+    camera_error: 'Camera error: {error}',
+    camera_running: 'Camera running: {w}×{h}, {fps} fps',
+    stream_stalled: 'Video stream stalled — restarting camera',
+    manual_rec_on: 'Manual recording enabled',
+    manual_rec_off: 'Manual recording disabled',
+    motion_started: 'Motion detected',
+    motion_ended: 'Motion ended: {sec} s, peak {peak}%',
+    recording_started: 'Recording started ({trigger})',
+    recording_saved: 'Recording saved: {sec} s, {mb} MB',
+    record_error: 'Recording error: {error}',
+    recordings_deleted: 'Recordings deleted: {n}',
+    settings_changed: 'Settings changed: {keys}',
+    login_failed: 'Failed login attempt from {ip}',
+    power_disconnected: 'Power disconnected{batt}',
+    power_connected: 'Power connected{batt}',
+    battery_low: 'Battery low{batt}',
+    battery_okay: 'Battery recovered{batt}',
+    battery_suffix: ' (battery {pct}%)',
+  },
+};
+
 function fmtUptime(sec) {
   const d = Math.floor(sec / 86400), hh = Math.floor(sec % 86400 / 3600), mm = Math.floor(sec % 3600 / 60);
   const lang = resolveLang();
@@ -501,6 +552,21 @@ function route() {
   if (view === 'events') loadEvents();
   if (view === 'settings') loadSettings();
   window.scrollTo(0, 0);
+}
+
+/* Render an event's localized text from its code + args; falls back to the raw server message. */
+function eventText(e) {
+  if (!e.code) return e.message;
+  const lang = resolveLang();
+  let tpl = EVENT_STRINGS[lang][e.code] || EVENT_STRINGS.en[e.code];
+  if (!tpl) return e.message;
+  const args = {};
+  if (e.args) for (const kv of e.args) args[kv.k] = kv.v;
+  if (args.pct !== undefined) args.batt = (EVENT_STRINGS[lang].battery_suffix || EVENT_STRINGS.en.battery_suffix).replace('{pct}', args.pct);
+  else args.batt = '';
+  if (args.trigger) args.trigger = t('trigger_' + args.trigger) || args.trigger;
+  if (args.keys) args.keys = args.keys.split(',').map((k) => settingTitle(k.trim()) || k.trim()).join(', ');
+  return tpl.replace(/\{(\w+)\}/g, (m, k) => (args[k] !== undefined ? args[k] : m));
 }
 
 /* ================= events channel ================= */
@@ -739,7 +805,7 @@ function renderMiniEvents() {
   ul.textContent = '';
   const list = S.events.slice(0, 6);
   if (!list.length) { ul.append(h('li', { class: 'muted', text: t('nothing_yet') })); return; }
-  for (const e of list) ul.append(h('li', null, h('time', { text: fmtShortTime(e.timeMs) }), h('span', { text: e.message })));
+  for (const e of list) ul.append(h('li', null, h('time', { text: fmtShortTime(e.timeMs) }), h('span', { text: eventText(e) })));
 }
 
 /* ================= recordings ================= */
@@ -901,12 +967,24 @@ async function loadEvents() {
     renderMiniEvents();
   } catch (e) { /* handled */ }
 }
+
+async function clearEvents() {
+  if (!S.events.length) return;
+  if (!confirm(t('clear_events_confirm'))) return;
+  try {
+    await api('/api/events/clear', { body: {} });
+    S.events = [];
+    renderEvents();
+    renderMiniEvents();
+    toast(t('events_cleared'));
+  } catch (e) { toast(e.message, true); }
+}
 function renderEvents() {
   const ul = $('#events-list');
   ul.textContent = '';
   if (!S.events.length) { ul.append(h('li', { class: 'muted', text: t('no_events_yet') })); return; }
   for (const e of S.events) {
-    const body = h('div', { class: 'ev-body' }, h('div', { text: e.message }), h('div', { class: 'ev-time', text: fmtDateTime(e.timeMs) }));
+    const body = h('div', { class: 'ev-body' }, h('div', { text: eventText(e) }), h('div', { class: 'ev-time', text: fmtDateTime(e.timeMs) }));
     if (e.recordingId) {
       const a = h('a', { href: '#/recordings', class: 'ev-link', text: t('open_recording') });
       a.onclick = async (ev) => {
@@ -1461,6 +1539,7 @@ async function boot() {
   initTheme();
   $('#lang-btn').value = getLang();
   $('#lang-btn').onchange = (e) => setLang(e.target.value);
+  $('#events-clear').onclick = clearEvents;
   initLive();
   initRecordings();
   initLogin();

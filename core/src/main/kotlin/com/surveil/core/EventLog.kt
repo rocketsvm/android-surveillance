@@ -11,6 +11,10 @@ data class LogEvent(
     val kind: String,
     val message: String,
     val recordingId: String? = null,
+    /** Stable id of the message template, for client-side localization; null for legacy entries. */
+    val code: String? = null,
+    /** Placeholders for the template, e.g. {"sec": "12", "mb": "3"}. */
+    val args: Map<String, String>? = null,
 )
 
 /** Persistent ring of recent events (motion, recordings, errors) shown in the web UI. */
@@ -29,8 +33,8 @@ class EventLog(private val file: File, private val capacity: Int = 1000) {
         }
     }
 
-    fun add(kind: String, message: String, recordingId: String? = null) {
-        val e = LogEvent(System.currentTimeMillis(), kind, message, recordingId)
+    fun add(kind: String, message: String, recordingId: String? = null, code: String? = null, args: Map<String, String>? = null) {
+        val e = LogEvent(System.currentTimeMillis(), kind, message, recordingId, code, args)
         synchronized(this) {
             events.addLast(e)
             while (events.size > capacity) events.removeFirst()
@@ -45,6 +49,16 @@ class EventLog(private val file: File, private val capacity: Int = 1000) {
 
     @Synchronized
     fun recent(limit: Int = 200): List<LogEvent> = events.toList().takeLast(limit).reversed()
+
+    /** Clears the log (memory and file) and returns the number of removed events. */
+    @Synchronized
+    fun clear(): Int {
+        val n = events.size
+        events.clear()
+        appendedSinceCompact = 0
+        runCatching { file.parentFile?.mkdirs(); file.writeText("") }
+        return n
+    }
 
     private fun compact() {
         appendedSinceCompact = 0

@@ -74,7 +74,7 @@ class WebApi(private val engine: CoreEngine) {
             val body = parseObject(req) ?: return@post HttpResponse.error(400, "JSON object expected")
             val result = engine.settingsStore.update(body)
             if (result.changed.isNotEmpty()) {
-                engine.events.add("settings", "Изменены настройки: " + result.changed.joinToString { Schema.byKey[it]?.title ?: it })
+                engine.events.add("settings", "Изменены настройки: " + result.changed.joinToString { Schema.byKey[it]?.title ?: it }, code = "settings_changed", args = mapOf("keys" to result.changed.joinToString(", ")))
             }
             json(buildJsonObject {
                 putJsonArray("changed") { result.changed.forEach { add(JsonPrimitive(it)) } }
@@ -87,7 +87,7 @@ class WebApi(private val engine: CoreEngine) {
         post("/api/recordings/delete") { req ->
             val ids = (parseObject(req)?.get("ids") as? JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
             val deleted = ids.count { engine.repo.delete(it) }
-            if (deleted > 0) engine.events.add("recording", "Удалено записей: $deleted")
+            if (deleted > 0) engine.events.add("recording", "Удалено записей: $deleted", code = "recordings_deleted", args = mapOf("n" to deleted.toString()))
             json(buildJsonObject { put("deleted", deleted) })
         }
         delete("/api/recordings/{id}") { req ->
@@ -128,6 +128,9 @@ class WebApi(private val engine: CoreEngine) {
             json(buildJsonObject {
                 put("events", JsonArray(engine.events.recent(limit).map { engine.eventJson(it) }))
             })
+        }
+        post("/api/events/clear") {
+            json(buildJsonObject { put("cleared", engine.events.clear()) })
         }
 
         get("/ws/live") { HttpResponse.WebSocketUpgrade { ws -> engine.live.serveWebSocket(ws) } }
@@ -170,7 +173,7 @@ class WebApi(private val engine: CoreEngine) {
         return try {
             val token = engine.auth.login(user, pass, ip)
             if (token == null) {
-                engine.events.add("access", "Неудачная попытка входа с $ip")
+                engine.events.add("access", "Неудачная попытка входа с $ip", code = "login_failed", args = mapOf("ip" to ip))
                 HttpResponse.error(401, "Неверное имя пользователя или пароль")
             } else {
                 HttpResponse.ok().header(

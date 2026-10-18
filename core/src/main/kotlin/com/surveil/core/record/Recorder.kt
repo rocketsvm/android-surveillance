@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong
 interface RecorderListener {
     fun onRecordingStarted(clip: Clip, trigger: String) {}
     fun onRecordingFinished(meta: RecordingMeta) {}
-    fun onRecorderError(message: String) {}
+    fun onRecorderError(message: String, code: String? = null, args: Map<String, String>? = null) {}
 }
 
 /**
@@ -148,7 +148,7 @@ class Recorder(
                     }
                 }
             } catch (e: Exception) {
-                listener.onRecorderError("Ошибка записи: ${e.message}")
+                listener.onRecorderError("Ошибка записи: ${e.message}", "record_error", mapOf("error" to (e.message ?: "")))
                 runCatching { writer?.close() }
                 writer = null
                 clip = null

@@ -108,12 +108,14 @@ class CameraService : LifecycleService() {
     private val powerReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val core = engine?.core ?: return
-            val level = DeviceInfo.deviceStatus(context).batteryPercent?.let { " (батарея $it%)" } ?: ""
+            val pct = DeviceInfo.deviceStatus(context).batteryPercent
+            val level = pct?.let { " (батарея $it%)" } ?: ""
+            val args = pct?.let { mapOf("pct" to it.toString()) }
             when (intent.action) {
-                Intent.ACTION_POWER_DISCONNECTED -> core.onSystemEvent("Зарядка отключена$level", alert = true)
-                Intent.ACTION_POWER_CONNECTED -> core.onSystemEvent("Зарядка подключена$level", alert = true)
-                Intent.ACTION_BATTERY_LOW -> core.onSystemEvent("Батарея разряжается$level", alert = true)
-                Intent.ACTION_BATTERY_OKAY -> core.onSystemEvent("Заряд батареи восстановлен$level", alert = false)
+                Intent.ACTION_POWER_DISCONNECTED -> core.onSystemEvent("Зарядка отключена$level", alert = true, code = "power_disconnected", args = args)
+                Intent.ACTION_POWER_CONNECTED -> core.onSystemEvent("Зарядка подключена$level", alert = true, code = "power_connected", args = args)
+                Intent.ACTION_BATTERY_LOW -> core.onSystemEvent("Батарея разряжается$level", alert = true, code = "battery_low", args = args)
+                Intent.ACTION_BATTERY_OKAY -> core.onSystemEvent("Заряд батареи восстановлен$level", alert = false, code = "battery_okay", args = args)
             }
         }
     }

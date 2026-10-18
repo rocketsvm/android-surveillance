@@ -145,13 +145,13 @@ class CoreEngine(
                 try { Thread.sleep(1000) } catch (_: InterruptedException) { break }
             }
         }, "status-ticker").apply { isDaemon = true; start() }
-        events.add("system", "Сервис запущен")
+        events.add("system", "Сервис запущен", code = "service_started")
     }
 
     fun stop() {
         if (!running) return
         running = false
-        events.add("system", "Сервис остановлен")
+        events.add("system", "Сервис остановлен", code = "service_stopped")
         ticker?.interrupt()
         hub.stop()
         recorder.shutdown()
@@ -184,7 +184,7 @@ class CoreEngine(
         cameraStatus = s
         if (s.state == "running" && prev.state != "running") runningSinceNs = System.nanoTime()
         if (s.state == "error" && (prev.state != "error" || prev.error != s.error)) {
-            events.add("camera", "Ошибка камеры: ${s.error ?: "неизвестно"}")
+            events.add("camera", "Ошибка камеры: ${s.error ?: "неизвестно"}", code = "camera_error", args = mapOf("error" to (s.error ?: "неизвестно")))
             if (prev.state != "error") {
                 // Brief takeovers (someone opened the camera app) resolve themselves; alert only if it persists.
                 scope.launch {
@@ -195,7 +195,7 @@ class CoreEngine(
             }
         }
         if (s.state == "running" && prev.state != "running") {
-            events.add("camera", "Камера работает: ${s.width}×${s.height}, ${s.fps} к/с")
+            events.add("camera", "Камера работает: ${s.width}×${s.height}, ${s.fps} к/с", code = "camera_running", args = mapOf("w" to s.width.toString(), "h" to s.height.toString(), "fps" to s.fps.toString()))
         }
         publishStatus()
     }
@@ -219,14 +219,14 @@ class CoreEngine(
     }
 
     /** Device-level event (power, battery) from the platform: logged and, if enabled, sent to Telegram. */
-    fun onSystemEvent(message: String, alert: Boolean) {
-        events.add("system", message)
+    fun onSystemEvent(message: String, alert: Boolean, code: String? = null, args: Map<String, String>? = null) {
+        events.add("system", message, code = code, args = args)
         if (alert) telegram.onSystem("${settings.name}: $message")
     }
 
     fun setManualRecording(on: Boolean) {
         recorder.setManual(on)
-        events.add("recording", if (on) "Ручная запись включена" else "Ручная запись выключена")
+        events.add("recording", if (on) "Ручная запись включена" else "Ручная запись выключена", code = if (on) "manual_rec_on" else "manual_rec_off")
     }
 
     /**
@@ -239,7 +239,7 @@ class CoreEngine(
         val lastActivity = maxOf(lastVideoFrameNs, runningSinceNs)
         if (now - lastActivity < STALL_RESTART_NS || now - lastWatchdogRestartNs < 2 * STALL_RESTART_NS) return
         lastWatchdogRestartNs = now
-        events.add("camera", "Видеопоток остановился — перезапуск камеры")
+        events.add("camera", "Видеопоток остановился — перезапуск камеры", code = "stream_stalled")
         platform.restartCamera()
     }
 
@@ -285,12 +285,12 @@ class CoreEngine(
         if (active) {
             motionStartMs = System.currentTimeMillis()
             motionPeak = score
-            events.add("motion", "Обнаружено движение")
+            events.add("motion", "Обнаружено движение", code = "motion_started")
             val time = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss", java.util.Locale.US).format(java.util.Date(motionStartMs))
             telegram.onMotion(settings.name, time) { cb -> platform.snapshot(1280, cb) }
         } else {
             val sec = (System.currentTimeMillis() - motionStartMs) / 1000
-            events.add("motion", "Движение закончилось: ${sec} с, пик %.1f%%".format(motionPeak), recorder.currentClipId)
+            events.add("motion", "Движение закончилось: ${sec} с, пик %.1f%%".format(motionPeak), recorder.currentClipId, code = "motion_ended", args = mapOf("sec" to sec.toString(), "peak" to "%.1f".format(motionPeak)))
         }
         bus.broadcast(motionJson().toString())
         publishStatus()
@@ -477,6 +477,8 @@ class CoreEngine(
         put("kind", e.kind)
         put("message", e.message)
         e.recordingId?.let { put("recordingId", it) }
+        e.code?.let { put("code", it) }
+        e.args?.let { a -> putJsonArray("args") { a.forEach { (k, v) -> add(buildJsonObject { put("k", k); put("v", v) }) } } }
     }
 
     private inner class RecorderEvents : RecorderListener {
@@ -486,13 +488,13 @@ class CoreEngine(
                 "continuous" -> "непрерывная"
                 else -> "по движению"
             }
-            events.add("recording", "Начата запись ($what)", clip.id)
+            events.add("recording", "Начата запись ($what)", clip.id, code = "recording_started", args = mapOf("trigger" to trigger))
             platform.snapshot(480) { jpeg -> if (jpeg != null) runCatching { clip.thumb.writeBytes(jpeg) } }
             publishStatus()
         }
 
         override fun onRecordingFinished(meta: RecordingMeta) {
-            events.add("recording", "Запись сохранена: ${meta.durationMs / 1000} с, ${meta.sizeBytes / 1024 / 1024} МБ", meta.id)
+            events.add("recording", "Запись сохранена: ${meta.durationMs / 1000} с, ${meta.sizeBytes / 1024 / 1024} МБ", meta.id, code = "recording_saved", args = mapOf("sec" to (meta.durationMs / 1000).toString(), "mb" to (meta.sizeBytes / 1024 / 1024).toString()))
             if (meta.trigger == "motion") repo.find(meta.id)?.let { clip ->
                 val time = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss", java.util.Locale.US).format(java.util.Date(meta.startMs))
                 telegram.onClip(clip.video, "${settings.name}: запись $time, ${meta.durationMs / 1000} с")
@@ -501,8 +503,8 @@ class CoreEngine(
             publishStatus()
         }
 
-        override fun onRecorderError(message: String) {
-            events.add("recording", message)
+        override fun onRecorderError(message: String, code: String?, args: Map<String, String>?) {
+            events.add("recording", message, code = code, args = args)
         }
     }
 
