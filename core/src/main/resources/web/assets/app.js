@@ -1082,12 +1082,12 @@ const SETTING_HELP = {
 
 function settingTitle(key) {
   const lang = resolveLang();
-  return SETTING_TITLES[lang][key] || SETTING_TITLES.en[key] || null;
+  return SETTING_TITLES[lang][key] || (lang === 'ru' ? null : SETTING_TITLES.en[key]) || null;
 }
 
 function settingHelp(key) {
   const lang = resolveLang();
-  return SETTING_HELP[lang][key] || SETTING_HELP.en[key] || null;
+  return SETTING_HELP[lang][key] || (lang === 'ru' ? null : SETTING_HELP.en[key]) || null;
 }
 
 const CHOICE_LABELS = {
@@ -1109,7 +1109,7 @@ const CHOICE_LABELS = {
 
 function translateChoiceLabel(key, value, originalLabel) {
   const lang = resolveLang();
-  const map = CHOICE_LABELS[lang][key] || CHOICE_LABELS.en[key];
+  const map = CHOICE_LABELS[lang][key] || (lang === 'ru' ? null : CHOICE_LABELS.en[key]);
   if (map && map[value] !== undefined) return map[value];
   return originalLabel;
 }
