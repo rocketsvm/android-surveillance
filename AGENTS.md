@@ -6,11 +6,31 @@ README_RU.md (Russian). Working notes, toolchain quirks and test results: NOTES.
 
 ## Localization
 
-- Phone app: Android resource strings in `app/src/main/res/values/` (English) and `values-ru/` (Russian).
-- Web UI: client-side translation in `core/src/main/resources/web/assets/app.js` (`STRINGS` objects,
-  `t()` function). Language preference stored in localStorage, defaults to system language.
-- Settings group titles: translated client-side via `GROUP_TITLES` map (server returns Russian titles).
-- Language setting: `sys.language` (auto/en/ru) in Settings → System.
+The phone app language and the web UI language are **independent**.
+
+- Phone app: Android resource strings in `app/src/main/res/values/` (English, default) and
+  `values-ru/` (Russian). Language setting `sys.language` (auto/en/ru) in Settings → System;
+  `auto` follows the system locale. Applying it calls `setLocale()` + `activity.recreate()`
+  (must run on the main thread; do not recreate on startup — that loops).
+- Web UI language: dropdown `#lang-btn` in the header (EN/RU). Stored in localStorage
+  (`surveil_lang`); on first visit the system language is resolved once and saved as an explicit
+  choice. `sys.language` is deliberately hidden from the web settings page (`renderSettings`).
+- Web UI translation is client-side in `core/src/main/resources/web/assets/app.js`:
+  - `STRINGS` + `t()` for UI text; `applyLang()` also processes `data-i18n` / `data-i18n-title`
+    attributes in `index.html` (static HTML is written in English, Russian is applied at runtime).
+  - Server strings arrive in Russian from `Schema.kt` / `DeviceInfo.kt`. They are translated by
+    **setting key**, never by matching Russian text: `GROUP_TITLES`, `SETTING_TITLES`,
+    `SETTING_HELP`, `CHOICE_LABELS`, `UNITS_EN`. `SETTING_HELP` must only contain keys that have
+    `help` on the server — never invent help text for settings that have none.
+  - When Russian is selected, these lookups return null so the server's original Russian wins.
+  - Unit/date formatters are language-aware: `fmtBytes`, `fmtUptime`, `fmtValue`, `fmtDay`.
+- Events are localized via structured messages, not string matching: `LogEvent` carries `code` +
+  `args` (see `EventLog.add(kind, message, recordingId, code, args)`); the client renders them from
+  `EVENT_STRINGS` in `eventText()`. `message` stays the Russian original — it is what Telegram gets,
+  and what legacy log entries (no `code`) fall back to. New events: add a code server-side and an
+  EN+RU template in `EVENT_STRINGS`.
+- Event log can be cleared: `EventLog.clear()` via `POST /api/events/clear` (Clear button).
+- Not translated: camera names (provided by the camera HAL) and Telegram message bodies.
 
 ## Modules
 
@@ -30,6 +50,8 @@ README_RU.md (Russian). Working notes, toolchain quirks and test results: NOTES.
   - `settings/` — `Schema` (single source of truth for phone UI, web UI and validation),
     `SettingsStore` (JSON file, StateFlow, PBKDF2 password).
   - `web/` — routes (`WebApi`), auth (cookie session or HTTP Basic), event push (`EventBus`).
+  - `EventLog` — persistent ring of events (`LogEvent`: timeMs, kind, message, recordingId, code,
+    args) shown in the web UI; `code` + `args` make web-side localization possible (see Localization).
   - `rtsp/` — RTSP 1.0 server: SDP, RTP H.264 (single NAL / FU-A, SPS+PPS before IDR),
     AAC (RFC 3640), TCP interleaved and UDP, RTCP sender reports; Basic auth.
   - `notify/` — `TelegramNotifier`: motion photo with cooldown, clip video, power/camera alerts,
@@ -68,6 +90,8 @@ AudioRecord → AAC ────────────────────
 - Settings: add new ones only in `settings/Schema.kt`; both UIs render them automatically.
   Pick the `Apply` level honestly (LIVE / PIPELINE / SERVER).
 - Build outputs go outside the synced folder: always build via `tools/gw.sh`.
+  Gradle configuration cache is enabled in `gradle.properties` (build ~7s → ~4s).
+- Check the web UI JS after editing: `node --check core/src/main/resources/web/assets/app.js`.
 
 ## Testing
 
