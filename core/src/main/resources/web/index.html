@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d1016">
 <meta name="color-scheme" content="dark light">
-<title>Камера наблюдения</title>
+<title data-i18n="app_title">Surveillance</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="stylesheet" href="/assets/app.css">
@@ -49,22 +49,22 @@
 <header class="topbar">
   <a class="brand" href="#/">
     <span class="brand-mark"><svg class="i"><use href="#i-video"/></svg></span>
-    <span class="brand-name" id="cam-name">Камера</span>
+    <span class="brand-name" id="cam-name" data-i18n="camera">Camera</span>
   </a>
   <div class="pills">
-    <span class="pill pill-live" id="pill-live"><span class="dot"></span><span class="t">Нет связи</span></span>
-    <span class="pill pill-motion" id="pill-motion" title="Движение" hidden><svg class="i"><use href="#i-motion"/></svg><span class="t">Движение</span></span>
+    <span class="pill pill-live" id="pill-live"><span class="dot"></span><span class="t" data-i18n="no_connection">No connection</span></span>
+    <span class="pill pill-motion" id="pill-motion" title="Motion" hidden><svg class="i"><use href="#i-motion"/></svg><span class="t" data-i18n="motion_detected">Motion</span></span>
     <span class="pill pill-rec" id="pill-rec" hidden><span class="dot"></span>REC</span>
   </div>
   <nav class="tabs" id="tabs">
     <a href="#/" data-view="live"><svg class="i"><use href="#i-video"/></svg><span data-i18n="camera">Камера</span></a>
     <a href="#/recordings" data-view="recordings"><svg class="i"><use href="#i-film"/></svg><span data-i18n="recordings">Записи</span></a>
     <a href="#/events" data-view="events"><svg class="i"><use href="#i-activity"/></svg><span data-i18n="events">События</span></a>
-    <a href="#/settings" data-view="settings"><svg class="i"><use href="#i-sliders"/></svg><span>Настройки</span></a>
+    <a href="#/settings" data-view="settings"><svg class="i"><use href="#i-sliders"/></svg><span data-i18n="settings">Settings</span></a>
   </nav>
   <div class="top-actions">
-    <button class="icon-btn" id="theme-btn" title="Тема"><svg class="i"><use href="#i-moon"/></svg></button>
-    <button class="icon-btn" id="logout-btn" title="Выйти" hidden><svg class="i"><use href="#i-logout"/></svg></button>
+    <button class="icon-btn" id="theme-btn" title="Theme"><svg class="i"><use href="#i-moon"/></svg></button>
+    <button class="icon-btn" id="logout-btn" title="Logout" hidden><svg class="i"><use href="#i-logout"/></svg></button>
   </div>
 </header>
 
@@ -78,56 +78,56 @@
           <div class="motion-box" id="motion-box" hidden></div>
           <div class="stage-badges">
             <span class="badge" id="badge-res">—</span>
-            <span class="badge" id="badge-lat" title="Задержка буфера">—</span>
+            <span class="badge" id="badge-lat" title="Buffer latency">—</span>
           </div>
           <div class="stage-overlay" id="stage-overlay">
             <div class="spinner"></div>
-            <div class="msg" id="stage-msg">Подключение к камере…</div>
+            <div class="msg" id="stage-msg" data-i18n="connecting">Connecting to camera…</div>
           </div>
           <button class="stage-play" id="stage-play" hidden><svg class="i"><use href="#i-play"/></svg></button>
         </div>
         <div class="controls">
           <div class="btn-row">
-            <button class="btn" id="btn-snapshot" title="Сохранить снимок"><svg class="i"><use href="#i-camera"/></svg><span data-i18n="snapshot">Снимок</span></button>
-            <button class="btn" id="btn-record"><svg class="i"><use href="#i-record"/></svg><span data-i18n="record">Записать</span></button>
-            <button class="btn" id="btn-torch" title="Фонарик"><svg class="i"><use href="#i-torch"/></svg><span data-i18n="flashlight">Свет</span></button>
-            <button class="btn" id="btn-sound" title="Звук" hidden><svg class="i"><use href="#i-mute"/></svg><span data-i18n="sound">Звук</span></button>
-            <button class="btn" id="btn-fullscreen" title="Во весь экран"><svg class="i"><use href="#i-maximize"/></svg></button>
+            <button class="btn" id="btn-snapshot" title="Save snapshot"><svg class="i"><use href="#i-camera"/></svg><span data-i18n="snapshot">Snapshot</span></button>
+            <button class="btn" id="btn-record"><svg class="i"><use href="#i-record"/></svg><span data-i18n="record">Record</span></button>
+            <button class="btn" id="btn-torch" title="Flashlight"><svg class="i"><use href="#i-torch"/></svg><span data-i18n="flashlight">Light</span></button>
+            <button class="btn" id="btn-sound" title="Sound" hidden><svg class="i"><use href="#i-mute"/></svg><span data-i18n="sound">Sound</span></button>
+            <button class="btn" id="btn-fullscreen" title="Fullscreen"><svg class="i"><use href="#i-maximize"/></svg></button>
           </div>
-          <div class="seg" id="rec-mode" role="radiogroup" aria-label="Режим записи">
-            <button data-mode="off">Не писать</button>
-            <button data-mode="motion">По движению</button>
-            <button data-mode="continuous">Всегда</button>
+          <div class="seg" id="rec-mode" role="radiogroup" aria-label="Recording mode">
+            <button data-mode="off" data-i18n="rec_off">Off</button>
+            <button data-mode="motion" data-i18n="rec_motion">On motion</button>
+            <button data-mode="continuous" data-i18n="rec_continuous">Always</button>
           </div>
         </div>
       </div>
       <aside class="side">
         <div class="card stat-card">
-          <div class="card-title">Детектор движения</div>
+          <div class="card-title" data-i18n="motion_detection">Motion detection</div>
           <div class="meter"><div class="meter-fill" id="motion-meter"></div><div class="meter-threshold" id="motion-threshold"></div></div>
           <div class="meter-caption"><span id="motion-state">—</span><span id="motion-score">0%</span></div>
         </div>
         <div class="card stat-card">
-          <div class="card-title">Поток</div>
+          <div class="card-title" data-i18n="stream">Stream</div>
           <dl class="kv">
-            <dt>Разрешение</dt><dd id="st-res">—</dd>
-            <dt>Кадров/с</dt><dd id="st-fps">—</dd>
-            <dt>Битрейт</dt><dd id="st-kbps">—</dd>
-            <dt>Зрителей</dt><dd id="st-viewers">—</dd>
+            <dt data-i18n="resolution">Resolution</dt><dd id="st-res">—</dd>
+            <dt data-i18n="fps">FPS</dt><dd id="st-fps">—</dd>
+            <dt data-i18n="bitrate">Bitrate</dt><dd id="st-kbps">—</dd>
+            <dt data-i18n="viewers">Viewers</dt><dd id="st-viewers">—</dd>
           </dl>
         </div>
         <div class="card stat-card">
-          <div class="card-title">Телефон</div>
+          <div class="card-title" data-i18n="phone">Phone</div>
           <dl class="kv">
-            <dt><svg class="i"><use href="#i-battery"/></svg>Батарея</dt><dd id="st-battery">—</dd>
-            <dt><svg class="i"><use href="#i-temp"/></svg>Температура</dt><dd id="st-temp">—</dd>
-            <dt><svg class="i"><use href="#i-drive"/></svg>Свободно</dt><dd id="st-free">—</dd>
-            <dt>Работает</dt><dd id="st-uptime">—</dd>
+            <dt><svg class="i"><use href="#i-battery"/></svg><span data-i18n="battery">Battery</span></dt><dd id="st-battery">—</dd>
+            <dt><svg class="i"><use href="#i-temp"/></svg><span data-i18n="temperature">Temperature</span></dt><dd id="st-temp">—</dd>
+            <dt><svg class="i"><use href="#i-drive"/></svg><span data-i18n="free_space">Free</span></dt><dd id="st-free">—</dd>
+            <dt data-i18n="uptime">Uptime</dt><dd id="st-uptime">—</dd>
           </dl>
         </div>
         <div class="card stat-card">
-          <div class="card-title">Последние события</div>
-          <ul class="mini-events" id="mini-events"><li class="muted">Пока ничего</li></ul>
+          <div class="card-title" data-i18n="recent_events">Recent events</div>
+          <ul class="mini-events" id="mini-events"><li class="muted" data-i18n="nothing_yet">Nothing yet</li></ul>
         </div>
       </aside>
     </div>
@@ -136,15 +136,15 @@
   <!-- RECORDINGS -->
   <section class="view" id="view-recordings" hidden>
     <div class="page-head">
-      <h1>Записи</h1>
+      <h1 data-i18n="recordings">Recordings</h1>
       <div class="head-actions">
         <div class="seg small" id="rec-filter">
-          <button data-f="all" class="on">Все</button>
-          <button data-f="motion">Движение</button>
-          <button data-f="continuous">Непрерывные</button>
-          <button data-f="manual">Ручные</button>
+          <button data-f="all" class="on" data-i18n="all">All</button>
+          <button data-f="motion" data-i18n="motion">Motion</button>
+          <button data-f="continuous" data-i18n="continuous">Continuous</button>
+          <button data-f="manual" data-i18n="manual">Manual</button>
         </div>
-        <button class="btn ghost" id="btn-select"><svg class="i"><use href="#i-check"/></svg><span>Выбрать</span></button>
+        <button class="btn ghost" id="btn-select"><svg class="i"><use href="#i-check"/></svg><span data-i18n="select">Select</span></button>
       </div>
     </div>
     <div class="storage-bar card">
@@ -152,33 +152,33 @@
       <div class="bar"><div class="bar-fill" id="storage-fill"></div></div>
     </div>
     <div class="select-bar card" id="select-bar" hidden>
-      <span id="select-count">Выбрано: 0</span>
+      <span id="select-count" data-i18n="selected_count">Selected: 0</span>
       <div class="btn-row">
-        <button class="btn ghost" id="btn-select-all">Выбрать всё</button>
-        <button class="btn danger" id="btn-delete-selected"><svg class="i"><use href="#i-trash"/></svg><span>Удалить</span></button>
-        <button class="btn ghost" id="btn-select-cancel">Отмена</button>
+        <button class="btn ghost" id="btn-select-all" data-i18n="select_all">Select all</button>
+        <button class="btn danger" id="btn-delete-selected"><svg class="i"><use href="#i-trash"/></svg><span data-i18n="delete">Delete</span></button>
+        <button class="btn ghost" id="btn-select-cancel" data-i18n="cancel">Cancel</button>
       </div>
     </div>
     <div id="rec-list" class="rec-list"></div>
     <div class="empty" id="rec-empty" hidden>
       <svg class="i"><use href="#i-film"/></svg>
-      <p>Записей пока нет</p>
-      <p class="muted">Записи появятся, когда камера заметит движение — или включите режим «Всегда».</p>
+      <p data-i18n="no_recordings_yet">No recordings yet</p>
+      <p class="muted" data-i18n="no_recordings_hint">Recordings will appear when the camera detects motion — or enable "Always" mode.</p>
     </div>
-    <div class="more"><button class="btn ghost" id="btn-more" hidden>Показать ещё</button></div>
+    <div class="more"><button class="btn ghost" id="btn-more" hidden data-i18n="show_more">Show more</button></div>
   </section>
 
   <!-- EVENTS -->
   <section class="view" id="view-events" hidden>
-    <div class="page-head"><h1>События</h1></div>
+    <div class="page-head"><h1 data-i18n="events">Events</h1></div>
     <ul class="events card" id="events-list"></ul>
   </section>
 
   <!-- SETTINGS -->
   <section class="view" id="view-settings" hidden>
     <div class="page-head">
-      <h1>Настройки</h1>
-      <label class="switch-label"><input type="checkbox" id="show-advanced"><span class="switch"></span>Дополнительные</label>
+      <h1 data-i18n="settings">Settings</h1>
+      <label class="switch-label"><input type="checkbox" id="show-advanced"><span class="switch"></span><span data-i18n="advanced">Advanced</span></label>
     </div>
     <div class="settings-grid" id="settings-groups"></div>
     <div class="card info-card" id="info-card"></div>
@@ -190,7 +190,7 @@
   <div class="modal-box" role="dialog" aria-modal="true">
     <div class="modal-head">
       <div class="modal-title" id="modal-title"></div>
-      <button class="icon-btn" data-close title="Закрыть"><svg class="i"><use href="#i-x"/></svg></button>
+      <button class="icon-btn" data-close title="Close"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-foot" id="modal-foot"></div>
@@ -200,11 +200,11 @@
 <div class="login" id="login" hidden>
   <form class="login-box card" id="login-form">
     <div class="login-icon"><svg class="i"><use href="#i-lock"/></svg></div>
-    <h2 id="login-title">Вход</h2>
-    <label>Имя пользователя<input name="username" autocomplete="username" value="admin" required></label>
-    <label>Пароль<input name="password" type="password" autocomplete="current-password" required></label>
+    <h2 id="login-title" data-i18n="login_title">Login</h2>
+    <label><span data-i18n="username">Username</span><input name="username" autocomplete="username" value="admin" required></label>
+    <label><span data-i18n="password">Password</span><input name="password" type="password" autocomplete="current-password" required></label>
     <div class="login-error" id="login-error"></div>
-    <button class="btn primary" type="submit">Войти</button>
+    <button class="btn primary" type="submit" data-i18n="enter">Enter</button>
   </form>
 </div>
 
