@@ -154,6 +154,7 @@ const STRINGS = {
     show_more: 'Показать ещё',
     advanced: 'Дополнительные',
     username: 'Имя пользователя',
+    free: 'свободно',
   },
   en: {
     app_title: 'Surveillance',
@@ -307,6 +308,7 @@ const STRINGS = {
     show_more: 'Show more',
     advanced: 'Advanced',
     username: 'Username',
+    free: 'free',
   },
 };
 
@@ -757,7 +759,8 @@ function renderRecordings() {
   const st = S.storage;
   if (st) {
     const total = st.totalBytes || 1;
-    $('#storage-text').textContent = `${t('recordings_storage')}: ${fmtBytes(st.usedBytes)} · ${t('free')} ${fmtBytes(st.freeBytes)} / ${fmtBytes(st.totalBytes)} (${st.label})`;
+    const storageLabel = st.id ? translateChoiceLabel('record.storage', st.id, st.label) : translateChoiceLabel('record.storage', 'internal', st.label);
+    $('#storage-text').textContent = `${t('recordings_storage')}: ${fmtBytes(st.usedBytes)} · ${t('free')} ${fmtBytes(st.freeBytes)} / ${fmtBytes(st.totalBytes)} (${storageLabel})`;
     $('#storage-fill').style.width = Math.min(100, (total - st.freeBytes) / total * 100) + '%';
   }
   const list = filteredRecordings();
@@ -950,10 +953,14 @@ function findDef(key) {
   return null;
 }
 
+const UNITS_EN = { 'к/с': 'fps', 'кбит/с': 'kbps', 'с': 's', 'мин': 'min', 'ГБ': 'GB', 'дн.': 'd', 'дБ': 'dB', '×': '×', '%': '%', 'EV': 'EV' };
 function fmtValue(def, v) {
   const n = Number(v);
   const txt = def.type === 'float' ? (Math.round(n * 100) / 100).toString().replace('.', ',') : String(n);
-  return def.unit ? `${txt} ${def.unit}` : txt;
+  if (!def.unit) return txt;
+  const lang = resolveLang();
+  const unit = lang === 'ru' ? def.unit : (UNITS_EN[def.unit] || def.unit);
+  return `${txt} ${unit}`;
 }
 
 const SETTING_TITLES = {
@@ -1011,6 +1018,7 @@ const SETTING_TITLES = {
     'sys.language': 'Language',
     'sys.autostart': 'Start on boot',
     'sys.name': 'Camera name',
+    'record.storage': 'Storage',
   },
 };
 
@@ -1085,15 +1093,17 @@ function settingHelp(key) {
 const CHOICE_LABELS = {
   ru: {},
   en: {
-    'record.mode': { off: 'Off', motion: 'On motion', continuous: 'Always' },
+    'record.mode': { off: 'Off', motion: 'On motion', continuous: 'Continuous' },
     'record.storage': { internal: 'Phone storage' },
-    'video.orientation': { '0': 'Normal', '90': '90°', '180': '180°', '270': '270°' },
-    'video.bitrateMode': { cbr: 'CBR', vbr: 'VBR' },
-    'osd.position': { 'top-left': 'Top left', 'top-right': 'Top right', 'bottom-left': 'Bottom left', 'bottom-right': 'Bottom right' },
-    'video.profile': { auto: 'Auto', h264: 'H.264', h265: 'H.265' },
+    'video.orientation': { auto: 'Auto (by sensor)', landscape: 'Landscape', landscape_flip: 'Landscape flipped', portrait: 'Portrait', portrait_flip: 'Portrait flipped' },
+    'video.bitrateMode': { cbr: 'Constant (CBR)', vbr: 'Variable (VBR)' },
+    'video.profile': { auto: 'Auto', high: 'High', main: 'Main', baseline: 'Baseline' },
+    'video.resolution': { '640x480': '640×480', '1280x720': '1280×720 (HD)', '1920x1080': '1920×1080 (Full HD)' },
+    'osd.position': { tl: 'Top left', tr: 'Top right', bl: 'Bottom left', br: 'Bottom right' },
     'camera.awb': { auto: 'Auto', daylight: 'Daylight', cloudy: 'Cloudy', incandescent: 'Incandescent', fluorescent: 'Fluorescent' },
-    'camera.focus': { auto: 'Auto', manual: 'Manual', infinity: 'Infinity' },
-    'camera.exposure': { auto: 'Auto' },
+    'camera.focus': { continuous: 'Continuous AF', infinity: 'Infinity' },
+    'camera.antibanding': { auto: 'Auto', '50hz': '50 Hz', '60hz': '60 Hz', off: 'Off' },
+    'sys.language': { auto: 'System default', en: 'English', ru: 'Русский' },
   },
 };
 
