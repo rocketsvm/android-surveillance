@@ -317,6 +317,8 @@ function getLang() {
 }
 function setLang(lang) {
   localStorage.setItem('surveil_lang', lang);
+  const btn = $('#lang-btn');
+  if (btn) btn.value = lang;
   applyLang();
 }
 function resolveLang() {
@@ -333,14 +335,16 @@ function t(key) {
 function applyLang() {
   const lang = resolveLang();
   document.documentElement.lang = lang;
+  const btn = $('#lang-btn');
+  if (btn) btn.value = getLang();
   // Update all elements with data-i18n attribute
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     el.textContent = t(key);
   });
   // Update document title
-  if (status.name) {
-    document.title = status.name + ' — ' + t('app_title');
+  if (S.status && S.status.name) {
+    document.title = S.status.name + ' — ' + t('app_title');
   }
 }
 
@@ -1100,23 +1104,11 @@ function renderSettings() {
   root.textContent = '';
   root.classList.toggle('show-adv', $('#show-advanced').checked);
 
-  // Language selector card
-  const langCard = h('div', { class: 'card group' }, h('h2', { text: t('language') }));
-  const langSelect = h('select', { class: 'input', style: 'max-width:200px' });
-  for (const [code, label] of [['auto', t('lang_system')], ['en', 'English'], ['ru', t('lang_ru')]]) {
-    const opt = h('option', { value: code, selected: getLang() === code });
-    opt.textContent = label;
-    langSelect.append(opt);
-  }
-  langSelect.onchange = () => { setLang(langSelect.value); renderSettings(); };
-  langCard.append(langSelect);
-  root.append(langCard);
-
   for (const g of S.groups || []) {
     const card = h('div', { class: 'card group', 'data-group': g.id }, h('h2', { text: groupTitle(g.id) }));
     card.append(h('div', { class: 'group-notice', hidden: true }));
     for (const def of g.settings) {
-      if (def.key === 'sys.language') continue; // web UI language is controlled by the selector above
+      if (def.key === 'sys.language') continue; // language switch is in the header
       card.append(renderField(def));
     }
     if (g.id === 'notify') {
@@ -1467,6 +1459,8 @@ function start() {
 
 async function boot() {
   initTheme();
+  $('#lang-btn').value = getLang();
+  $('#lang-btn').onchange = (e) => setLang(e.target.value);
   initLive();
   initRecordings();
   initLogin();
