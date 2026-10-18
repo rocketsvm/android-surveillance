@@ -157,6 +157,7 @@ const STRINGS = {
     free: 'свободно',
     clear_events_confirm: 'Очистить весь журнал событий?',
     events_cleared: 'Журнал событий очищен',
+    latency_hint: 'Задержка трансляции',
   },
   en: {
     app_title: 'Surveillance',
@@ -313,11 +314,17 @@ const STRINGS = {
     free: 'free',
     clear_events_confirm: 'Clear the entire event log?',
     events_cleared: 'Event log cleared',
+    latency_hint: 'Stream latency',
   },
 };
 
 function getLang() {
-  return localStorage.getItem('surveil_lang') || 'auto';
+  const lang = localStorage.getItem('surveil_lang');
+  if (lang === 'en' || lang === 'ru') return lang;
+  // 'auto' (and first visit): resolve from the system language once, then it's an explicit choice.
+  const resolved = navigator.language.startsWith('ru') ? 'ru' : 'en';
+  localStorage.setItem('surveil_lang', resolved);
+  return resolved;
 }
 function setLang(lang) {
   localStorage.setItem('surveil_lang', lang);
@@ -326,11 +333,7 @@ function setLang(lang) {
   applyLang();
 }
 function resolveLang() {
-  const lang = getLang();
-  if (lang === 'auto') {
-    return navigator.language.startsWith('ru') ? 'ru' : 'en';
-  }
-  return lang;
+  return getLang();
 }
 function t(key) {
   const lang = resolveLang();
@@ -345,6 +348,9 @@ function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.getAttribute('data-i18n-title'));
   });
   // Update document title
   if (S.status && S.status.name) {
@@ -748,7 +754,7 @@ function startPlayer() {
         if (now - lastBytesAt >= 2000) {
           lastBytes = bytes; lastBytesAt = now;
         }
-        $('#badge-lat').textContent = lag ? lag.toFixed(2).replace('.', ',') + ' с' : '—';
+        $('#badge-lat').textContent = lag ? lag.toFixed(2).replace('.', resolveLang() === 'ru' ? ',' : '.') + (resolveLang() === 'ru' ? ' с' : ' s') : '—';
       },
     });
   }
