@@ -736,7 +736,7 @@ function recCard(r) {
   if (r.live) {
     return h('div', { class: 'rec-card' },
       h('div', { class: 'rec-thumb' },
-        h('div', { class: 'live-rec' }, h('span', { class: 'dot' }), t('recording_in_progress')),
+        h('div', { class: 'live-rec' }, h('span', { class: 'dot' }), t('recording_in_progress'))),
       h('div', { class: 'rec-meta' },
         h('div', null, h('div', { class: 'rec-time', text: fmtTime(r.startMs) }), h('div', { class: 'rec-sub', text: t('trigger_' + TRIGGERS[r.trigger]) || '' })),
       ));
