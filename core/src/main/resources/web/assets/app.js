@@ -1115,7 +1115,10 @@ function renderSettings() {
   for (const g of S.groups || []) {
     const card = h('div', { class: 'card group', 'data-group': g.id }, h('h2', { text: groupTitle(g.id) }));
     card.append(h('div', { class: 'group-notice', hidden: true }));
-    for (const def of g.settings) card.append(renderField(def));
+    for (const def of g.settings) {
+      if (def.key === 'sys.language') continue; // web UI language is controlled by the selector above
+      card.append(renderField(def));
+    }
     if (g.id === 'notify') {
       const test = h('button', { class: 'btn', type: 'button', style: 'margin-top:12px' }, t('send_test'));
       test.onclick = async () => {
