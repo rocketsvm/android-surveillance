@@ -1,6 +1,6 @@
 # Android Surveillance Camera
 
-[Русская версия](README_RU.md) · [Releases](https://github.com/rocketsvm/android-surveillance/releases)
+[Русская версия](README_RU.md) · [Releases](https://github.com/rocketsvm/android-surveillance/releases) · [License: GPL-3.0](LICENSE)
 
 Turns an Android phone into an IP security camera:
 
@@ -121,3 +121,8 @@ Architecture and conventions — in [AGENTS.md](AGENTS.md), notes and test resul
 | POST | `/api/notify/test` | test Telegram message |
 | POST | `/api/notify/chats` | chats that messaged the bot (for "Chat ID" field) |
 | RTSP | `rtsp://<address>:8554/live` | H.264 + AAC for NVRs and players |
+
+## License
+
+[GNU General Public License v3.0 or later](LICENSE). You are free to use, modify and redistribute the app;
+modified versions you distribute must stay open source under the same license.
