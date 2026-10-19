@@ -1,6 +1,6 @@
 # Камера наблюдения для Android
 
-[English version](README.md) · [Релизы](https://github.com/rocketsvm/android-surveillance/releases)
+[English version](README.md) · [Релизы](https://github.com/rocketsvm/android-surveillance/releases) · [Лицензия: GPL-3.0](LICENSE)
 
 Превращает Android-телефон в IP-камеру наблюдения:
 
@@ -123,3 +123,8 @@ tools/gw.sh :core:runDev -PdevArgs="<папка> 8090"   # веб-интерфе
 | POST | `/api/notify/test` | тестовое сообщение в Telegram |
 | POST | `/api/notify/chats` | чаты, писавшие боту (для поля «ID чата») |
 | RTSP | `rtsp://<адрес>:8554/live` | H.264 + AAC для регистраторов и плееров |
+
+## Лицензия
+
+[GNU GPL v3.0 или более поздняя версия](LICENSE). Приложение можно свободно использовать, изменять и
+распространять; изменённые версии при распространении должны оставаться открытыми под той же лицензией.
